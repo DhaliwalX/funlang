@@ -2,9 +2,11 @@ package ast
 
 import "bitbucket.org/dhaliwalprince/funlang/lex"
 
-// ASTNode is the base interface for all the expression
+// Node is the base interface for all the expression
 // and statement types.
-type ASTNode interface {
+type Node interface {
     Beg() lex.Position
     End() lex.Position
+
+    Accept(Visitor)
 }

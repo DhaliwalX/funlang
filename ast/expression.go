@@ -2,38 +2,85 @@ package ast
 
 import "bitbucket.org/dhaliwalprince/funlang/lex"
 
-type Expression struct {
-    beg lex.Position
-    end lex.Position
+type exprNode interface {
+    Node
+    expr()
 }
 
-func (expr *Expression) Beg() lex.Position {
-    return expr.beg
+type nilLiteral struct {
+    pos lex.Position // since nil has three characters only
 }
 
-func (expr *Expression) End() lex.Position {
-    return expr.end
-}
-
-type NumericLiteral struct {
-    Expression
+type numericLiteral struct {
+    pos lex.Position
     val string
     isFloating bool
 }
 
-func (literal *NumericLiteral) Value() string {
-    return literal.val
-}
-
-func (literal *NumericLiteral) IsFloating() bool {
-    return literal.isFloating
-}
-
-type StringLiteral struct {
-    Expression
+type stringLiteral struct {
+    pos lex.Position
     val string
 }
 
-func (literal *StringLiteral) Value() string {
-    return literal.val
+type arrayLiteral struct {
+    vals []exprNode
+}
+
+type structProp struct {
+    pos lex.Position
+    name string
+    val exprNode
+}
+
+type structLiteral struct {
+    pos lex.Position
+    end lex.Position
+    props []structProp
+}
+
+type identifier struct {
+    pos lex.Position
+    name string
+}
+
+type booleanLiteral struct {
+    pos lex.Position
+    val bool
+}
+
+type argumentList struct {
+    pos lex.Position
+    exprs []exprNode
+}
+
+type memberExpression struct {
+    pos lex.Position
+    token lex.TokenType
+    member exprNode
+    expr exprNode
+}
+
+type prefixExpression struct {
+    pos lex.Position
+    op lex.TokenType
+    expr exprNode
+}
+
+type postfixExpression struct {
+    pos lex.Position
+    op lex.TokenType
+    expr exprNode
+}
+
+type binaryExpression struct {
+    pos lex.Position
+    op lex.TokenType
+    left exprNode
+    right exprNode
+}
+
+type assignExpression struct {
+    pos lex.Position
+    left exprNode
+    right exprNode
 }
