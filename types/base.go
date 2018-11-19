@@ -1,5 +1,5 @@
 // base.go contains the definition for base type interface
-package t
+package types
 
 type TypeTag int
 
@@ -12,9 +12,11 @@ const (
     POINTER_TYPE // int*
     STRUCT_TYPE // struct
     ARRAY_TYPE // int[]
+    UNKNOWN_TYPE
 )
 
 type Type interface {
+    // name is internal representation of a type
     Name() string
 
     // returns this type's element type

@@ -1,5 +1,5 @@
 // literal.go defines the literal types
-package t
+package types
 
 // represents an integer
 type intType struct {
