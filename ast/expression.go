@@ -156,3 +156,5 @@ func (b *BinaryExpression) End() lex.Position { return b.right.End() }
 
 func (a *AssignExpression) Beg() lex.Position { return a.left.Beg() }
 func (a *AssignExpression) End() lex.Position { return a.right.End() }
+
+// visitor methods
