@@ -7,80 +7,152 @@ type exprNode interface {
     expr()
 }
 
-type nilLiteral struct {
+type NilLiteral struct {
     pos lex.Position // since nil has three characters only
 }
 
-type numericLiteral struct {
+type NumericLiteral struct {
     pos lex.Position
     val string
     isFloating bool
 }
 
-type stringLiteral struct {
+type StringLiteral struct {
     pos lex.Position
     val string
 }
 
-type arrayLiteral struct {
+type ArrayLiteral struct {
     vals []exprNode
 }
 
-type structProp struct {
+type StructProp struct {
     pos lex.Position
     name string
     val exprNode
 }
 
-type structLiteral struct {
+type StructLiteral struct {
     pos lex.Position
     end lex.Position
-    props []structProp
+    props []StructProp
 }
 
-type identifier struct {
+type Identifier struct {
     pos lex.Position
     name string
 }
 
-type booleanLiteral struct {
+type BooleanLiteral struct {
     pos lex.Position
     val bool
 }
 
-type argumentList struct {
+type ArgumentList struct {
     pos lex.Position
     exprs []exprNode
 }
 
-type memberExpression struct {
+type MemberExpression struct {
     pos lex.Position
     token lex.TokenType
     member exprNode
-    expr exprNode
+    x exprNode
 }
 
-type prefixExpression struct {
+type PrefixExpression struct {
     pos lex.Position
     op lex.TokenType
-    expr exprNode
+    x exprNode
 }
 
-type postfixExpression struct {
+type PostfixExpression struct {
     pos lex.Position
+    end lex.Position
     op lex.TokenType
-    expr exprNode
+    x exprNode
 }
 
-type binaryExpression struct {
+type BinaryExpression struct {
     pos lex.Position
     op lex.TokenType
     left exprNode
     right exprNode
 }
 
-type assignExpression struct {
+type AssignExpression struct {
     pos lex.Position
     left exprNode
     right exprNode
 }
+
+func (*NilLiteral) expr() {}
+func (*NumericLiteral) expr() {}
+func (*StringLiteral) expr() {}
+func (*BooleanLiteral) expr() {}
+func (*Identifier) expr() {}
+func (*ArgumentList) expr() {}
+func (*MemberExpression) expr() {}
+func (*PrefixExpression) expr() {}
+func (*PostfixExpression) expr() {}
+func (*BinaryExpression) expr() {}
+func (*AssignExpression) expr() {}
+
+func (n *NilLiteral) Beg() lex.Position { return n.pos }
+func (n *NilLiteral) End() lex.Position {
+    return lex.Position{Col:n.pos.Col+3,Row:n.pos.Row}
+}
+
+func (n *NumericLiteral) Beg() lex.Position{ return n.pos }
+func (n *NumericLiteral) End() lex.Position {
+    return lex.Position{Col: n.pos.Col+len(n.val), Row: n.pos.Row}
+}
+
+func (s *StringLiteral) Beg() lex.Position { return s.pos }
+func (s *StringLiteral) End() lex.Position {
+    return lex.Position{Col:s.pos.Col+len(s.val), Row:s.pos.Row}
+}
+
+func (b *BooleanLiteral) Beg() lex.Position { return b.pos }
+func (b *BooleanLiteral) End() lex.Position {
+    if b.val {
+        return lex.Position{Col:b.pos.Col+4, Row:b.pos.Row}
+    } else {
+        return lex.Position{Col:b.pos.Col+5, Row:b.pos.Row}
+    }
+}
+
+func (i *Identifier) Beg() lex.Position { return i.pos }
+func (i *Identifier) End() lex.Position {
+    return lex.Position{Col: i.pos.Col+len(i.name), Row: i.pos.Row}
+}
+
+func (a *ArgumentList) Beg() lex.Position { return a.pos }
+func (a *ArgumentList) End() lex.Position {
+    if len(a.exprs) > 0 {
+        last := a.exprs[len(a.exprs)-1]
+        return lex.Position{
+            Row: last.End().Row,
+            Col: last.End().Col,
+        }
+    } else {
+        return a.Beg()
+    }
+}
+
+func (m *MemberExpression) Beg() lex.Position { return m.pos }
+func (m *MemberExpression) End() lex.Position { return m.x.End() }
+
+func (p *PrefixExpression) Beg() lex.Position { return p.pos }
+func (p *PrefixExpression) End() lex.Position { return p.x.End() }
+
+func (p *PostfixExpression) Beg() lex.Position { return p.pos }
+func (p *PostfixExpression) End() lex.Position {
+    return p.end
+}
+
+func (b *BinaryExpression) Beg() lex.Position { return b.left.Beg() }
+func (b *BinaryExpression) End() lex.Position { return b.right.End() }
+
+func (a *AssignExpression) Beg() lex.Position { return a.left.Beg() }
+func (a *AssignExpression) End() lex.Position { return a.right.End() }

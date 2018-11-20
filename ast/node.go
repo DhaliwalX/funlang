@@ -7,6 +7,4 @@ import "bitbucket.org/dhaliwalprince/funlang/lex"
 type Node interface {
     Beg() lex.Position
     End() lex.Position
-
-    Accept(Visitor)
 }
