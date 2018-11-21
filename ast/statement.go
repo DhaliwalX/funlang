@@ -62,6 +62,34 @@ func (*FunctionStatement) stmt() {}
 func (*IfElseStatement) stmt() {}
 func (*ReturnStatement) stmt() {}
 
+func (b *BlockStatement) Accept(v Visitor) {
+	v.VisitBlockStatement(b)
+}
+
+func (f *ForStatement) Accept(v Visitor) {
+	v.VisitForStatement(f)
+}
+
+func (e *ExpressionStmt) Accept(v Visitor) {
+	v.VisitExpressionStmt(e)
+}
+
+func (f *FunctionProtoType) Accept(v Visitor) {
+	v.VisitFunctionProtoType(f)
+}
+
+func (f *FunctionStatement) Accept(v Visitor) {
+	v.VisitFunctionStatement(f)
+}
+
+func (i *IfElseStatement) Accept(v Visitor) {
+	v.VisitIfElseStatement(i)
+}
+
+func (r *ReturnStatement) Accept(v Visitor) {
+	v.VisitReturnStatement(r)
+}
+
 func (b *BlockStatement) Beg() lex.Position { return b.pos }
 func (b *BlockStatement) End() lex.Position { return b.end }
 

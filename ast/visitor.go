@@ -23,3 +23,7 @@ type Visitor interface {
 	VisitIfElseStatement(statement *IfElseStatement)
 	VisitReturnStatement(statement *ReturnStatement)
 }
+
+type VisitorAcceptor interface {
+	Accept(Visitor)
+}
