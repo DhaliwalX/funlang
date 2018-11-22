@@ -95,3 +95,22 @@ func TestLexerParseOperator(t *testing.T) {
         }
     }
 }
+
+func TestLexerClose(t *testing.T) {
+    source := "struct{}"
+    lex := NewLexer(sourceFromString(source))
+    tok := lex.Next()
+    if tok.Type() != STRUCT {
+        t.Error(tok, "is not", STRUCT)
+    }
+
+    tok = lex.Next()
+    if tok.Type() != LBRACE {
+        t.Error(tok, "is not", LBRACE)
+    }
+
+    tok = lex.Next()
+    if tok.Type() != RBRACE {
+        t.Error(tok, "is not", RBRACE)
+    }
+}

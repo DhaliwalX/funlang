@@ -20,6 +20,10 @@ type FileSource struct {
     currentPos int
 }
 
+func NewStringSource(source string) *FileSource {
+    return &FileSource{ pos: Position{}, source: source}
+}
+
 func NewFileSource(path string) *FileSource {
     f, err := os.Open(path)
     if err != nil {

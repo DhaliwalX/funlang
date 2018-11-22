@@ -81,7 +81,7 @@ func (f *typeFactory) ArrayType(t Type) *arrayType {
 
 // TODO(@me): need to find a better way
 func (f *typeFactory) StructType(elemTypes map[string]Type) *structType {
-    if st, ok := f.structTypes[structType{ elems: elemTypes}.Name()]; ok {
+    if st, ok := f.structTypes[(&structType{ elems: elemTypes}).Name()]; ok {
         return st
     }
     st := &structType{elems: elemTypes}
@@ -90,7 +90,7 @@ func (f *typeFactory) StructType(elemTypes map[string]Type) *structType {
 }
 // TODO(@me,sameAsPrevious)
 func (f *typeFactory) FunctionType(retType Type, argsTypes []Type) *functionType {
-    if st, ok := f.functionTypes[functionType{returnType:retType, argsType:argsTypes}.Name()]; ok {
+    if st, ok := f.functionTypes[(&functionType{returnType:retType, argsType:argsTypes}).Name()]; ok {
         return st
     }
 

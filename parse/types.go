@@ -53,7 +53,8 @@ func (parser *Parser) parseType() ast.Expression {
 	case lex.LBRACK:
 		return parser.parseArrayType()
 
-	case lex.LBRACE:
+	case lex.STRUCT:
+		parser.advance()
 		return parser.parseStructType()
 
 	default:

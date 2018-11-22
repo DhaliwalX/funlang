@@ -17,7 +17,9 @@ type Lexer struct {
 }
 
 func NewLexer(source Source) *Lexer {
-    return &Lexer{source: source}
+    lex := &Lexer{source: source}
+    lex.next()
+    return lex
 }
 
 
@@ -149,7 +151,6 @@ func (lexer *Lexer) parseString(beg Position, t rune) Token {
 
 func (lexer *Lexer) Next() Token {
     beg := lexer.position
-    lexer.next()
 
     lexer.skipWSCharacters()
 

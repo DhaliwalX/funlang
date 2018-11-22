@@ -26,6 +26,7 @@ func (t *functionType) Name() string {
     }
 
     builder.WriteString(fmt.Sprintf("): %s", t.returnType.Name()))
+    return builder.String()
 }
 
 func (t *functionType) Field(string) Type {
