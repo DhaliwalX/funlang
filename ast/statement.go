@@ -5,7 +5,7 @@ import (
 	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
-type stmtNode interface {
+type Statement interface {
 	Node
 	stmt()
 }
@@ -13,18 +13,18 @@ type stmtNode interface {
 type BlockStatement struct {
 	pos lex.Position
 	end lex.Position
-	stmts []stmtNode
+	stmts []Statement
 }
 
 type ForStatement struct {
-	pos lex.Position
-	init exprNode
-	condition exprNode
-	body stmtNode
+	pos       lex.Position
+	init      Expression
+	condition Expression
+	body      Statement
 }
 
 type ExpressionStmt struct {
-	expr exprNode
+	expr Expression
 }
 
 type FunctionProtoType struct {
@@ -43,15 +43,15 @@ type FunctionStatement struct {
 }
 
 type IfElseStatement struct {
-	pos lex.Position
-	condition exprNode
-	body stmtNode
-	elseNode stmtNode
+	pos       lex.Position
+	condition Expression
+	body      Statement
+	elseNode  Statement
 }
 
 type ReturnStatement struct {
-	pos lex.Position
-	expr exprNode
+	pos  lex.Position
+	expr Expression
 }
 
 func (*BlockStatement) stmt() {}

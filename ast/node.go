@@ -9,3 +9,4 @@ type Node interface {
     Beg() lex.Position
     End() lex.Position
 }
+

@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bitbucket.org/dhaliwalprince/funlang/lex"
-	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
 type declNode interface {
@@ -11,10 +10,10 @@ type declNode interface {
 }
 
 type Declaration struct {
-	pos lex.Position
+	pos  lex.Position
 	name string
-	t TypeDeclaration
-	init exprNode
+	t    TypeDeclaration
+	init Expression
 }
 
 type DeclarationList struct {
@@ -25,7 +24,8 @@ type DeclarationList struct {
 type TypeDeclaration struct {
 	pos lex.Position
 	end lex.Position
-	t types.Type
+	t Expression
+	name Expression
 }
 
 func (*Declaration) decl() {}

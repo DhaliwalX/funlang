@@ -2,7 +2,7 @@ package ast
 
 import "bitbucket.org/dhaliwalprince/funlang/lex"
 
-type exprNode interface {
+type Expression interface {
     Node
     expr()
 }
@@ -23,13 +23,13 @@ type StringLiteral struct {
 }
 
 type ArrayLiteral struct {
-    vals []exprNode
+    vals []Expression
 }
 
 type StructProp struct {
-    pos lex.Position
+    pos  lex.Position
     name string
-    val exprNode
+    val  Expression
 }
 
 type StructLiteral struct {
@@ -50,40 +50,63 @@ type BooleanLiteral struct {
 
 type ArgumentList struct {
     pos lex.Position
-    exprs []exprNode
+    exprs []Expression
 }
 
 type MemberExpression struct {
-    pos lex.Position
-    token lex.TokenType
-    member exprNode
-    x exprNode
+    pos    lex.Position
+    token  lex.TokenType
+    member Expression
+    x      Expression
 }
 
 type PrefixExpression struct {
     pos lex.Position
-    op lex.TokenType
-    x exprNode
+    op  lex.TokenType
+    x   Expression
 }
 
 type PostfixExpression struct {
     pos lex.Position
     end lex.Position
-    op lex.TokenType
-    x exprNode
+    op  lex.TokenType
+    x   Expression
 }
 
 type BinaryExpression struct {
-    pos lex.Position
-    op lex.TokenType
-    left exprNode
-    right exprNode
+    pos   lex.Position
+    op    lex.TokenType
+    left  Expression
+    right Expression
 }
 
 type AssignExpression struct {
+    pos   lex.Position
+    left  Expression
+    right Expression
+}
+
+// type tree
+type ArrayType struct {
     pos lex.Position
-    left exprNode
-    right exprNode
+    size Expression
+    t Expression
+}
+
+type Field struct {
+    name Expression
+    t Expression
+}
+
+type StructType struct {
+    pos lex.Position
+    fields []*Field
+}
+
+type FuncType struct {
+    pos lex.Position
+    params []Expression
+    ret Expression
 }
 
 func (*NilLiteral) expr() {}
@@ -97,6 +120,10 @@ func (*PrefixExpression) expr() {}
 func (*PostfixExpression) expr() {}
 func (*BinaryExpression) expr() {}
 func (*AssignExpression) expr() {}
+func (*ArrayType) expr() {}
+func (*Field) expr() {}
+func (*StructType) expr() {}
+func (*FuncType) expr() {}
 
 // support for visitor
 func (l *NilLiteral) Accept(visitor Visitor) {
@@ -143,6 +170,22 @@ func (a *AssignExpression) Accept(visitor Visitor) {
     visitor.VisitAssignExpression(a)
 }
 
+func (a *ArrayType) Accept(visitor Visitor) {
+    visitor.VisitArrayType(a)
+}
+
+func (f *Field) Accept(visitor Visitor) {
+    visitor.VisitField(f)
+}
+
+func (s *StructType) Accept(visitor Visitor) {
+    visitor.VisitStructType(s)
+}
+
+func (f *FuncType) Accept(visitor Visitor) {
+    visitor.VisitFuncType(f)
+}
+
 func (n *NilLiteral) Beg() lex.Position { return n.pos }
 func (n *NilLiteral) End() lex.Position {
     return lex.Position{Col:n.pos.Col+3,Row:n.pos.Row}
@@ -176,10 +219,7 @@ func (a *ArgumentList) Beg() lex.Position { return a.pos }
 func (a *ArgumentList) End() lex.Position {
     if len(a.exprs) > 0 {
         last := a.exprs[len(a.exprs)-1]
-        return lex.Position{
-            Row: last.End().Row,
-            Col: last.End().Col,
-        }
+        return last.End()
     } else {
         return a.Beg()
     }
@@ -202,4 +242,21 @@ func (b *BinaryExpression) End() lex.Position { return b.right.End() }
 func (a *AssignExpression) Beg() lex.Position { return a.left.Beg() }
 func (a *AssignExpression) End() lex.Position { return a.right.End() }
 
-// visitor methods
+func (a *ArrayType) Beg() lex.Position { return a.pos }
+func (a *ArrayType) End() lex.Position { return a.t.End() }
+
+func (f *Field) Beg() lex.Position { return f.name.Beg() }
+func (f *Field) End() lex.Position { return f.t.End() }
+
+func (s *StructType) Beg() lex.Position { return s.pos }
+func (s *StructType) End() lex.Position {
+    if len(s.fields) >0 {
+        last := s.fields[len(s.fields)-1]
+        return last.End()
+    } else {
+        return s.pos
+    }
+}
+
+func (f *FuncType) Beg() lex.Position { return f.pos }
+func (f *FuncType) End() lex.Position { return f.ret.End() }

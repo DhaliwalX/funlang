@@ -1,9 +1,27 @@
 package parse
 
-import "bitbucket.org/dhaliwalprince/funlang/lex"
+import (
+    "bitbucket.org/dhaliwalprince/funlang/ast"
+    "bitbucket.org/dhaliwalprince/funlang/context"
+    "bitbucket.org/dhaliwalprince/funlang/lex"
+)
 
 type Parser struct {
     lex *lex.Lexer
+    current lex.Token
+    errs errorList
+    ctx *context.Context
+    builder *ast.Builder
+}
+
+func (parser *Parser) advance() {
+    parser.current = parser.lex.Next()
+}
+
+func (parser *Parser) advanceTil(t lex.TokenType) {
+    for parser.current.Type() != t {
+        parser.advance()
+    }
 }
 
 /*
