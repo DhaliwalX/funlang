@@ -315,3 +315,18 @@ func (p *BinaryExpression) String() string {
 func (p *AssignExpression) String() string {
     return fmt.Sprintf("%s = %s", p.left, p.right)
 }
+
+func (a *ArrayType) String() string {
+    return fmt.Sprintf("[]%s", a.t)
+}
+
+func (s *StructType) String() string {
+    builder := strings.Builder{}
+    builder.WriteString("struct{ ")
+    for _, field := range s.fields {
+        builder.WriteString(fmt.Sprintf("%s %s, ", field.name, field.t))
+    }
+
+    builder.WriteString("}")
+    return builder.String()
+}

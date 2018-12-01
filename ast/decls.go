@@ -75,3 +75,7 @@ func (d *Declaration) String() string {
 		}
 	}
 }
+
+func (t *TypeDeclaration) String() string {
+	return fmt.Sprintf("type %s %s", t.name, t.t)
+}
