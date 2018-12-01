@@ -49,6 +49,10 @@ func (t *functionType) ArgByIndex(i int) Type {
     return t.argsType[i]
 }
 
+func (t *functionType) String() string {
+    return t.Name()
+}
+
 func ToFunctionType(t Type) *functionType {
     return t.(*functionType)
 }

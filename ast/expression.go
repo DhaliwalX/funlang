@@ -1,6 +1,10 @@
 package ast
 
-import "bitbucket.org/dhaliwalprince/funlang/lex"
+import (
+    "bitbucket.org/dhaliwalprince/funlang/lex"
+    "fmt"
+    "strings"
+)
 
 type Expression interface {
     Node
@@ -260,3 +264,54 @@ func (s *StructType) End() lex.Position {
 
 func (f *FuncType) Beg() lex.Position { return f.pos }
 func (f *FuncType) End() lex.Position { return f.ret.End() }
+
+func (*NilLiteral) String() string {
+    return "nil"
+}
+
+func (n *NumericLiteral) String() string {
+    return n.val
+}
+
+func (n *StringLiteral) String() string {
+    return n.val
+}
+
+func (b *BooleanLiteral) String() string {
+    return fmt.Sprint(b.val)
+}
+
+func (i *Identifier) String() string {
+    return i.name
+}
+
+func (a *ArgumentList) String() string {
+    builder := strings.Builder{}
+    builder.WriteString("(")
+    for _, arg := range a.exprs {
+        builder.WriteString(fmt.Sprint(arg))
+        builder.WriteString(", ")
+    }
+    builder.WriteString(")")
+    return builder.String()
+}
+
+func (m *MemberExpression) String() string {
+    builder := strings.Builder{}
+    builder.WriteString("MemberExpression {\n")
+    builder.WriteString(fmt.Sprintf("\t%s\n\t%s\n\t%s", m.token, m.member, m.x))
+    builder.WriteString("}")
+    return builder.String()
+}
+
+func (p *PrefixExpression) String() string {
+    return fmt.Sprintf("%s (%s)", p.op, p.x)
+}
+
+func (p *BinaryExpression) String() string {
+    return fmt.Sprintf("(%s %s %s)", p.left, p.op, p.right)
+}
+
+func (p *AssignExpression) String() string {
+    return fmt.Sprintf("%s = %s", p.left, p.right)
+}

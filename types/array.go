@@ -31,6 +31,10 @@ func (t *arrayType) Name() string {
     }
 }
 
+func (t *arrayType) String() string {
+    return t.Name()
+}
+
 func ToArrayType(t Type) *arrayType {
     return t.(*arrayType)
 }

@@ -5,3 +5,5 @@ type Position struct {
     Col int
     Row int
 }
+
+var NO_POS = Position{Col:-1, Row: -1}

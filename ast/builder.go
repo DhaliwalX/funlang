@@ -3,6 +3,7 @@ package ast
 import (
 	"bitbucket.org/dhaliwalprince/funlang/context"
 	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"fmt"
 )
 
 type Builder struct {
@@ -21,6 +22,10 @@ func (b *Builder) NewNumericLiteral(pos lex.Position, val string, isFloat bool) 
 	return &NumericLiteral{pos: pos, val: val, isFloating:isFloat}
 }
 
+func (b *Builder) NewInt(num int) *NumericLiteral {
+	return &NumericLiteral{pos: lex.NO_POS, val: fmt.Sprint(num), isFloating: false}
+}
+
 func (b *Builder) NewStringLiteral(pos lex.Position, val string) *StringLiteral {
 	return &StringLiteral{pos: pos, val: val}
 }
@@ -37,9 +42,8 @@ func (b *Builder) NewArgumentList(pos lex.Position, args []Expression) *Argument
 	return &ArgumentList{pos, args}
 }
 
-func (b *Builder) NewMemberExpression(pos lex.Position,
-	token lex.TokenType, member Expression, x Expression) *MemberExpression {
-	return &MemberExpression{pos:pos,token:token,member:member,x:x}
+func (b *Builder) NewMemberExpression(token lex.TokenType, member Expression, x Expression) *MemberExpression {
+	return &MemberExpression{token:token,member:member,x:x}
 }
 
 func (b *Builder) NewPrefixExpression(pos lex.Position, op lex.TokenType,
@@ -52,8 +56,8 @@ func (b *Builder) NewPostfixExpression(pos lex.Position, op lex.TokenType,
 	return &PostfixExpression{pos:pos, op:op,x:x}
 }
 
-func (b *Builder) NewBinaryExpression(pos lex.Position, left, right Expression) *BinaryExpression {
-	return &BinaryExpression{pos:pos,left:left, right:right}
+func (b *Builder) NewBinaryExpression(pos lex.Position, tok lex.TokenType, left, right Expression) *BinaryExpression {
+	return &BinaryExpression{pos:pos,op:tok, left:left, right:right}
 }
 
 func (b *Builder) NewAssignExpression(pos lex.Position, left,right Expression) *AssignExpression {
@@ -76,7 +80,7 @@ func (b *Builder) NewFuncType(pos lex.Position, params []Expression, ret Express
 	return &FuncType{pos:pos, params: params, ret:ret}
 }
 
-func (b *Builder) NewDeclaration(pos lex.Position, name string, t TypeDeclaration,
+func (b *Builder) NewDeclaration(pos lex.Position, name string, t Expression,
 	init Expression) *Declaration {
 	return &Declaration{pos:pos, name:name, t:t, init:init}
 }

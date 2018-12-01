@@ -2,9 +2,10 @@ package ast
 
 import (
 	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"fmt"
 )
 
-type declNode interface {
+type DeclNode interface {
 	Node
 	decl()
 }
@@ -12,7 +13,7 @@ type declNode interface {
 type Declaration struct {
 	pos  lex.Position
 	name string
-	t    TypeDeclaration
+	t    Expression
 	init Expression
 }
 
@@ -62,3 +63,15 @@ func (d *Declaration) End() lex.Position { return d.t.End() }
 
 func (t *TypeDeclaration) Beg() lex.Position { return t.pos }
 func (t *TypeDeclaration) End() lex.Position { return t.end }
+
+func (d *Declaration) String() string {
+	if d.init == nil {
+		return fmt.Sprintf("var %s %s", d.name, d.init)
+	} else {
+		if d.t == nil {
+			return fmt.Sprintf("var %s = %s", d.name, d.init)
+		} else {
+			return fmt.Sprintf("var %s %s = %s", d.name, d.t, d.init)
+		}
+	}
+}
