@@ -92,3 +92,23 @@ func (b *Builder) NewDeclarationList(pos lex.Position, decls []Declaration) *Dec
 func (b *Builder) NewTypeDeclaration(pos lex.Position, name *Identifier, t Expression) *TypeDeclaration {
 	return &TypeDeclaration{pos:pos, name:name, t:t}
 }
+
+func (b *Builder) NewFunctionProtoType(pos lex.Position, name string, args []DeclNode, ret Expression) *FunctionProtoType {
+	return &FunctionProtoType{pos:pos, name:name, args:args, ret:ret}
+}
+
+func (b *Builder) NewFunctionStatement(proto *FunctionProtoType, body *BlockStatement) *FunctionStatement {
+	return &FunctionStatement{proto:proto, body:body}
+}
+
+func (b *Builder) NewIfStatement(condition Expression, body Statement, els Statement) *IfElseStatement {
+	return &IfElseStatement{condition:condition, body:body, elseNode:els}
+}
+
+func (b *Builder) NewForStatement(pos lex.Position, init, condition Expression, body Statement) *ForStatement {
+	return &ForStatement{pos:pos,init:init,condition:condition,body:body}
+}
+
+func (b *Builder) NewExpressionStatement(expr Expression) *ExpressionStmt {
+	return &ExpressionStmt{expr:expr}
+}

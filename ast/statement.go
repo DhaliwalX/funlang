@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bitbucket.org/dhaliwalprince/funlang/lex"
-	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
 type Statement interface {
@@ -31,15 +30,15 @@ type FunctionProtoType struct {
 	pos lex.Position
 	end lex.Position
 	name string
-	args DeclarationList
-	t types.Type
+	args []DeclNode
+	ret Expression
 }
 
 type FunctionStatement struct {
-	proto FunctionProtoType
+	proto *FunctionProtoType
 	// for linking c functions
 	isExtern bool
-	body BlockStatement
+	body *BlockStatement
 }
 
 type IfElseStatement struct {

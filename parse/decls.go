@@ -5,14 +5,8 @@ import (
     "bitbucket.org/dhaliwalprince/funlang/lex"
 )
 
-func (parser *Parser) parseDeclaration() ast.DeclNode {
-    if parser.current.Type() != lex.VAR {
-        parser.errs.append(unexpectedToken(parser.current, lex.VAR))
-        return nil
-    }
-
+func (parser *Parser) parseDeclarationEpilogue() ast.DeclNode {
     pos := parser.current.Begin()
-    parser.advance()
     v := parser.parseIdentifier()
     if v == nil {
         parser.errs.append(newParseError(parser.current, "expected an identifier"))
@@ -29,4 +23,14 @@ func (parser *Parser) parseDeclaration() ast.DeclNode {
 
     init := parser.parseAssignExpression()
     return parser.builder.NewDeclaration(pos, v.String(), t, init)
+}
+
+func (parser *Parser) parseDeclaration() ast.DeclNode {
+    if parser.current.Type() != lex.VAR {
+        parser.errs.append(unexpectedToken(parser.current, lex.VAR))
+        return nil
+    }
+
+    parser.advance()
+    return parser.parseDeclarationEpilogue()
 }
