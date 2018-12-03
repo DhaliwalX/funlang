@@ -66,7 +66,7 @@ func (t *TypeDeclaration) End() lex.Position { return t.end }
 
 func (d *Declaration) String() string {
 	if d.init == nil {
-		return fmt.Sprintf("var %s %s", d.name, d.init)
+		return fmt.Sprintf("var %s %s", d.name, d.t)
 	} else {
 		if d.t == nil {
 			return fmt.Sprintf("var %s = %s", d.name, d.init)

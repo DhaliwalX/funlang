@@ -7,9 +7,30 @@ import (
 )
 
 func (parser *Parser) parseForStatement() ast.Statement {
+	pos := parser.current.Begin()
 	parser.advance()
+	var init, condition ast.Expression
+	init = parser.parseExpression()
+	if parser.current.Type() == lex.SEMICOLON {
+		parser.advance()
+		condition = parser.parseExpression()
+	} else {
+		condition = init
+		init = nil
+	}
 
+	if parser.current.Type() != lex.LBRACE {
+		parser.errs.append(unexpectedToken(parser.current, lex.LBRACE))
+		return nil
+	}
 
+	body := parser.parseBlockStatement()
+	if body == nil {
+		parser.errs.append(errors.New("for body cannot be empty"))
+		return nil
+	}
+
+	return parser.builder.NewForStatement(pos, init, condition, body)
 }
 
 func (parser *Parser) parseFunction() ast.Statement {
@@ -18,9 +39,10 @@ func (parser *Parser) parseFunction() ast.Statement {
 	name := ""
 	if parser.current.Type() == lex.IDENT {
 		name = parser.current.Value()
+		parser.advance()
 	}
 
-	if parser.current.Type() != lex.LBRACK {
+	if parser.current.Type() != lex.LPAREN {
 		parser.errs.append(newParseError(parser.current, "expected a ("))
 		return nil
 	}
@@ -28,27 +50,22 @@ func (parser *Parser) parseFunction() ast.Statement {
 	parser.advance()
 	// parse arguments
 	params := []ast.DeclNode{}
-	stop := false
 	for {
 		decl := parser.parseDeclarationEpilogue()
 		if decl == nil {
 			return nil
 		}
-		if parser.current.Type() != lex.COMMA && parser.current.Type() == lex.RBRACK {
+		if parser.current.Type() != lex.COMMA && parser.current.Type() == lex.RPAREN {
 			parser.advance()
-			stop = true
+			break
 		}
 
 		if parser.current.Type() != lex.COMMA {
-			parser.errs.append(unexpectedToken(parser.current, lex.RBRACK))
+			parser.errs.append(unexpectedToken(parser.current, lex.RPAREN))
 			return nil
 		}
 
 		params = append(params, decl)
-
-		if stop {
-			break
-		}
 	}
 
 	ret := parser.parseType()
@@ -63,7 +80,6 @@ func (parser *Parser) parseFunction() ast.Statement {
 }
 
 func (parser *Parser) parseIfStatement() ast.Statement {
-	pos := parser.current.Begin()
 	parser.advance()
 	condition := parser.parseExpression()
 	if condition == nil {
@@ -91,12 +107,25 @@ func (parser *Parser) parseIfStatement() ast.Statement {
 }
 
 func (parser *Parser) parseReturnStatement() ast.Statement {
-
+	if parser.current.Type() != lex.RETURN {
+		parser.errs.append(newParseError(parser.current, "expected 'return'"))
+		return nil
+	}
+	pos := parser.current.Begin()
+	parser.advance()
+	expr := parser.parseExpression()
+	if parser.current.Type() != lex.SEMICOLON {
+		parser.errs.append(newParseError(parser.current, "expected a semicolon"))
+		return nil
+	}
+	parser.advance()
+	return parser.builder.NewReturnStatement(pos, expr)
 }
 
 func (parser *Parser) parseExpressionStatement() ast.Statement {
 	if parser.current.Type() == lex.SEMICOLON {
-		return nil
+		parser.advance()
+		return parser.builder.NewExpressionStatement(nil)
 	}
 
 	expr := parser.parseExpression()
@@ -110,11 +139,43 @@ func (parser *Parser) parseExpressionStatement() ast.Statement {
 		return nil
 	}
 
+	parser.advance()
+
 	return parser.builder.NewExpressionStatement(expr)
 }
 
 func (parser *Parser) parseBlockStatement() ast.Statement {
+	list := []ast.Statement{}
+	parser.advance()
+	for {
+		if parser.current.Type() == lex.RBRACE {
+			parser.advance()
+			break
+		}
 
+		stmt := parser.parseStatement()
+		if stmt == nil {
+			return nil
+		}
+		list = append(list, stmt)
+	}
+
+	return parser.builder.NewBlockStatement(list)
+}
+
+func (parser *Parser) parseDeclarationStatement() ast.DeclNode {
+	declNode := parser.parseDeclaration()
+	if declNode == nil {
+		return nil
+	}
+
+	if parser.current.Type() != lex.SEMICOLON {
+		parser.errs.append(newParseError(parser.current, "expected a semicolon"))
+		return nil
+	}
+
+	parser.advance()
+	return declNode
 }
 
 func (parser *Parser) parseStatement() ast.Statement {
@@ -133,7 +194,22 @@ func (parser *Parser) parseStatement() ast.Statement {
 
 	case lex.LBRACE:
 		return parser.parseBlockStatement()
+
 	default:
 		return parser.parseExpressionStatement()
+	}
+}
+
+func (parser *Parser) parseTopLevelNode() ast.Node {
+	switch parser.current.Type() {
+	case lex.FUNC:
+		return parser.parseFunction()
+
+	case lex.VAR:
+		return parser.parseDeclarationStatement()
+
+	default:
+		parser.errs.append(newParseError(parser.current, "expected a top-level function or var declaration"))
+		return nil
 	}
 }

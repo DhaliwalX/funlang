@@ -2,6 +2,8 @@ package ast
 
 import (
 	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"fmt"
+	"strings"
 )
 
 type Statement interface {
@@ -109,3 +111,49 @@ func (i *IfElseStatement) End() lex.Position { return i.body.End() }
 
 func (r *ReturnStatement) Beg() lex.Position { return r.pos }
 func (r *ReturnStatement) End() lex.Position { return r.expr.End() }
+
+func (b *BlockStatement) String() string {
+	builder := strings.Builder{}
+	builder.WriteString("{")
+	for _, stmt := range b.stmts {
+		builder.WriteString(fmt.Sprint(stmt))
+	}
+	builder.WriteString("}")
+	return builder.String()
+}
+
+func (b *ExpressionStmt) String() string {
+	return fmt.Sprintf("%s;", b.expr)
+}
+
+func (f *ForStatement) String() string {
+	return fmt.Sprintf("for %s; %s %s", f.init, f.condition, f.body)
+}
+
+func (i *IfElseStatement) String() string {
+	return fmt.Sprintf("if %s %s else %s", i.condition, i.body, i.elseNode)
+}
+
+func (r *ReturnStatement) String() string {
+	return fmt.Sprintf("return %s;", r.expr)
+}
+
+func (f *FunctionStatement) String() string {
+	return fmt.Sprintf("%s %s", f.proto, f.body)
+}
+
+func (f *FunctionProtoType) String() string {
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("func %s(", f.name))
+	for _, arg := range f.args {
+		builder.WriteString(fmt.Sprint(arg))
+		builder.WriteString(",")
+	}
+
+	builder.WriteString(fmt.Sprintf(") %s", f.ret))
+	return builder.String()
+}
+
+func (b *BlockStatement) Len() int {
+	return len(b.stmts)
+}

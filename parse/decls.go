@@ -18,9 +18,11 @@ func (parser *Parser) parseDeclarationEpilogue() ast.DeclNode {
             parser.errs.append(newParseError(parser.current, "expected a type or ="))
             return nil
         }
-        parser.advance()
     }
 
+    if parser.current.Type() == lex.ASSIGN {
+        parser.advance()
+    }
     init := parser.parseAssignExpression()
     return parser.builder.NewDeclaration(pos, v.String(), t, init)
 }

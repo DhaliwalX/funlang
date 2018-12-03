@@ -22,6 +22,9 @@ func NewLexer(source Source) *Lexer {
     return lex
 }
 
+func (lexer *Lexer) Source() Source {
+    return lexer.source
+}
 
 // nextLine moves the position pointer to next line
 func (lexer *Lexer) nextLine() {

@@ -298,9 +298,7 @@ func (a *ArgumentList) String() string {
 
 func (m *MemberExpression) String() string {
     builder := strings.Builder{}
-    builder.WriteString("MemberExpression {\n")
-    builder.WriteString(fmt.Sprintf("\t%s\n\t%s\n\t%s", m.token, m.member, m.x))
-    builder.WriteString("}")
+    builder.WriteString(fmt.Sprintf("('%s' %s %s)", m.token, m.member, m.x))
     return builder.String()
 }
 

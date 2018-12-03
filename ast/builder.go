@@ -7,10 +7,10 @@ import (
 )
 
 type Builder struct {
-	ctx context.Context
+	ctx *context.Context
 }
 
-func NewBuilder(ctx context.Context) *Builder {
+func NewBuilder(ctx *context.Context) *Builder {
 	return &Builder{ctx}
 }
 
@@ -111,4 +111,12 @@ func (b *Builder) NewForStatement(pos lex.Position, init, condition Expression, 
 
 func (b *Builder) NewExpressionStatement(expr Expression) *ExpressionStmt {
 	return &ExpressionStmt{expr:expr}
+}
+
+func (b *Builder) NewReturnStatement(pos lex.Position, expr Expression) *ReturnStatement {
+	return &ReturnStatement{pos:pos, expr:expr}
+}
+
+func (b *Builder) NewBlockStatement(list []Statement) *BlockStatement {
+	return &BlockStatement{stmts: list}
 }

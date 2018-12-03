@@ -24,6 +24,31 @@ func (parser *Parser) advanceTil(t lex.TokenType) {
     }
 }
 
+func NewParserFromString(ctx *context.Context, source string) *Parser {
+    src := lex.NewStringSource(source)
+    lexer := lex.NewLexer(src)
+    parser := Parser{lex:lexer, ctx: ctx, builder: ast.NewBuilder(ctx)}
+    return &parser
+}
+
+func (parser *Parser) Parse() (*ast.Program, error) {
+    parser.advance()
+
+    decls := []ast.Node{}
+    for {
+        if parser.current.Type() == lex.ILLEGAL || parser.current.Type() == lex.EOF {
+            break
+        }
+        a := parser.parseTopLevelNode()
+        if len(parser.errs.list) > 0 {
+            return nil, &parser.errs
+        }
+
+        decls = append(decls, a)
+    }
+    return ast.NewProgram(parser.ctx, parser.lex.Source(), decls), nil
+}
+
 /*
     M(NullLiteral)          \
     M(ThisHolder)           \

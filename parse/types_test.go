@@ -9,7 +9,7 @@ import (
 
 func newParser(source string) *Parser {
 	stringSource := lex.NewStringSource(source)
-	return &Parser{ lex: lex.NewLexer(stringSource), errs: errorList{}, builder: ast.NewBuilder(context.Context{})  }
+	return &Parser{ lex: lex.NewLexer(stringSource), errs: errorList{}, builder: ast.NewBuilder(&context.Context{})  }
 }
 
 func TestParseType(t *testing.T) {
