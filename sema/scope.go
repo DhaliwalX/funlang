@@ -1,31 +1,76 @@
 package sema
 
-import (
-	"bitbucket.org/dhaliwalprince/funlang/types"
-	"context"
-)
+import "bitbucket.org/dhaliwalprince/funlang/lex"
 
-type EntryType int
+type ObjKind int
 
 const (
-	TYPE_NAME EntryType = iota
-	VAR_NAME
+	DONT_KNOW ObjKind = iota
+	TYPE
+	VAR
+	FUNC
 )
 
-type ScopeEntry struct {
-	t EntryType
+
+type Object struct {
+	Kind ObjKind
+	Name string
+	Type interface{}
+	Decl interface{}
+	Func interface{}
+	Pos lex.Position
 }
 
-// scope represents one level
+type AlreadyDefined struct {}
+
+func (AlreadyDefined) Error() string {
+	return "already defined"
+}
+
+// scope is part of ast
 type Scope struct {
-	// types declared at this scope
-	factory *types.Factory
-
-	// symbols declared at this scope
-	symbols map[string]ScopeEntry
-	parent *Scope
+	outer *Scope
+	symbols map[string]*Object
 }
 
-func NewScope(parent *Scope, ctx *context.Context) *Scope {
-	return &Scope{parent:parent, symbols:make(map[string]ScopeEntry), factory: types.NewFactory(ctx)}
+func NewScope(outer *Scope) *Scope {
+	return &Scope{ outer: outer, symbols: make(map[string]*Object)}
+}
+
+func (scope *Scope) Outer() *Scope {
+	return scope.outer
+}
+
+func (scope *Scope) Lookup(name string) *Object {
+	o, ok := scope.symbols[name]
+	if !ok {
+		return nil
+	}
+	return o
+}
+
+func (scope *Scope) Put(name string, o *Object) {
+	scope.symbols[name] = o
+}
+
+func (scope *Scope) PutStrict(name string, o *Object) *Object {
+	if k := scope.Lookup(name); k != nil {
+		return k
+	}
+
+	scope.Put(name, o)
+	return nil
+}
+
+func resolve(scope *Scope, name string) *Object {
+	o := scope.Lookup(name)
+	if o != nil {
+		return o
+	}
+
+	if scope.outer != nil {
+		return resolve(scope.outer, name)
+	}
+
+	return nil
 }

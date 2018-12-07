@@ -17,6 +17,10 @@ type BlockStatement struct {
 	stmts []Statement
 }
 
+func (b *BlockStatement) Statements() []Statement {
+	return b.stmts
+}
+
 type ForStatement struct {
 	pos       lex.Position
 	init      Expression
@@ -24,8 +28,24 @@ type ForStatement struct {
 	body      Statement
 }
 
+func (f *ForStatement) Init() Expression {
+	return f.init
+}
+
+func (f *ForStatement) Condition() Expression {
+	return f.condition
+}
+
+func (f *ForStatement) Body() Statement {
+	return f.body
+}
+
 type ExpressionStmt struct {
 	expr Expression
+}
+
+func (e *ExpressionStmt) Expr() Expression {
+	return e.expr
 }
 
 type FunctionProtoType struct {
@@ -36,11 +56,31 @@ type FunctionProtoType struct {
 	ret Expression
 }
 
+func (proto *FunctionProtoType) Name() string {
+	return proto.name
+}
+
+func (proto *FunctionProtoType) Params() []DeclNode {
+	return proto.args
+}
+
+func (proto *FunctionProtoType) Return() Expression {
+	return proto.ret
+}
+
 type FunctionStatement struct {
 	proto *FunctionProtoType
 	// for linking c functions
 	isExtern bool
 	body *BlockStatement
+}
+
+func (f *FunctionStatement) Proto() *FunctionProtoType {
+	return f.proto
+}
+
+func (f *FunctionStatement) Body() *BlockStatement {
+	return f.body
 }
 
 type IfElseStatement struct {
@@ -50,9 +90,25 @@ type IfElseStatement struct {
 	elseNode  Statement
 }
 
+func (i *IfElseStatement) Condition() Expression {
+	return i.condition
+}
+
+func (i *IfElseStatement) Body() Statement {
+	return i.body
+}
+
+func (i *IfElseStatement) ElseNode() Statement {
+	return i.elseNode
+}
+
 type ReturnStatement struct {
 	pos  lex.Position
 	expr Expression
+}
+
+func (r *ReturnStatement) Expression() Expression {
+	return r.expr
 }
 
 func (*BlockStatement) stmt() {}

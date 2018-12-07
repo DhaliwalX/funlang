@@ -47,11 +47,14 @@ func (parser *Parser) parseFunction() ast.Statement {
 		return nil
 	}
 
-	parser.openScope()
 	parser.advance()
 	// parse arguments
 	params := []ast.DeclNode{}
 	for {
+		if parser.current.Type() == lex.RPAREN {
+			parser.advance()
+			break
+		}
 		decl := parser.parseDeclarationEpilogue()
 		if decl == nil {
 			return nil
@@ -77,12 +80,7 @@ func (parser *Parser) parseFunction() ast.Statement {
 		return nil
 	}
 
-	parser.closeScope()
 	fun := parser.builder.NewFunctionStatement(proto, body.(*ast.BlockStatement))
-	o := parser.topScope.PutStrict(name, &ast.Object{Kind:ast.FUNC, Func:fun, Pos: pos})
-	if o != nil {
-		parser.errs.append(newAlreadyDefinedError(o, fun))
-	}
 	return fun
 }
 
@@ -215,8 +213,10 @@ func (parser *Parser) parseTopLevelNode() ast.Node {
 	case lex.VAR:
 		return parser.parseDeclarationStatement()
 
+	case lex.TYPE:
+		return parser.parseTypeDeclaration()
 	default:
-		parser.errs.append(newParseError(parser.current, "expected a top-level function or var declaration"))
+		parser.errs.append(newParseError(parser.current, "expected a function or var or type declaration"))
 		return nil
 	}
 }

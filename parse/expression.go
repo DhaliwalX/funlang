@@ -97,10 +97,6 @@ func (parser *Parser) parseMemberExpression() ast.Expression {
 		switch parser.current.Type() {
 		case lex.PERIOD:
 			parser.advance()
-			if _, isIdent := primary.(*ast.Identifier); isIdent {
-				o := parser.resolve(primary)
-				if o.Type.(*ast.StructType)
-			}
 			member := parser.parsePrimaryExpression()
 			primary = parser.builder.NewMemberExpression(lex.PERIOD, primary, member)
 		case lex.ARROW:

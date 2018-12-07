@@ -17,6 +17,18 @@ type Declaration struct {
 	init Expression
 }
 
+func (d *Declaration) Name() string {
+	return d.name
+}
+
+func (d *Declaration) Type() Expression {
+	return d.t
+}
+
+func (d *Declaration) Init() Expression {
+	return d.init
+}
+
 type DeclarationList struct {
 	pos lex.Position
 	decls []*Declaration
@@ -27,6 +39,14 @@ type TypeDeclaration struct {
 	end lex.Position
 	t Expression
 	name Expression
+}
+
+func (t *TypeDeclaration) Type() Expression {
+	return t.t
+}
+
+func (t *TypeDeclaration) Name() string {
+	return t.name.(*Identifier).Name()
 }
 
 func (*Declaration) decl() {}

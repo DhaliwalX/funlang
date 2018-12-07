@@ -9,7 +9,8 @@ import (
 
 func newParser(source string) *Parser {
 	stringSource := lex.NewStringSource(source)
-	return &Parser{ lex: lex.NewLexer(stringSource), errs: errorList{}, builder: ast.NewBuilder(&context.Context{})  }
+	p := &Parser{ lex: lex.NewLexer(stringSource), errs: errorList{}, builder: ast.NewBuilder(&context.Context{})  }
+	return p
 }
 
 func TestParseType(t *testing.T) {
@@ -47,6 +48,20 @@ func TestParseStructType(t *testing.T) {
 	}
 	if _, ok := a.(*ast.StructType); !ok {
 		t.Error("did not parse struct")
+	}
+
+	t.Log(a)
+}
+
+func TestParseTypeDeclaration(t *testing.T) {
+	parser := newParser("type Name struct { val string }")
+	parser.advance()
+	a := parser.parseTypeDeclaration()
+	if len(parser.errs.list) != 0 {
+		t.Error(parser.errs.Error())
+	}
+	if a == nil {
+		t.Error("nil type declaration")
 	}
 
 	t.Log(a)

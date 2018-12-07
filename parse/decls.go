@@ -23,12 +23,11 @@ func (parser *Parser) parseDeclarationEpilogue() ast.DeclNode {
     if parser.current.Type() == lex.ASSIGN {
         parser.advance()
     }
+    if parser.current.Type() == lex.SEMICOLON {
+        return parser.builder.NewDeclaration(pos, v.String(), t, nil)
+    }
     init := parser.parseAssignExpression()
     node := parser.builder.NewDeclaration(pos, v.String(), t, init)
-    if o := parser.topScope.PutStrict(v.Name(), &ast.Object{Name:v.Name(), Kind:ast.VAR, Decl:v, Type:t}); o != nil {
-        parser.errs.append(newAlreadyDefinedError(o, node))
-        return nil
-    }
     return node
 }
 

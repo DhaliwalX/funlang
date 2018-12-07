@@ -7,6 +7,10 @@ import (
 
 func (parser *Parser) parseField() *ast.Field {
 	name := parser.parseIdentifier()
+	if name == nil {
+		parser.errs.append(unexpectedToken(parser.current, lex.IDENT))
+		return nil
+	}
 	t := parser.parseType()
 	return parser.builder.NewField(name, t)
 }
@@ -24,6 +28,10 @@ func (parser *Parser) parseStructType() *ast.StructType {
 
 		field := parser.parseField()
 		fields = append(fields, field)
+	}
+
+	if parser.current.Type() == lex.RBRACE {
+		parser.advance()
 	}
 
 	return parser.builder.NewStructType(pos, fields)
@@ -77,6 +85,10 @@ func (parser *Parser) parseTypeDeclaration() *ast.TypeDeclaration {
 	pos := parser.current.Begin()
 	parser.advance()
 	name := parser.parseIdentifier()
+	if name == nil {
+		parser.errs.append(unexpectedToken(parser.current, lex.IDENT))
+		return nil
+	}
 	t := parser.parseType()
 	return parser.builder.NewTypeDeclaration(pos, name, t)
 }

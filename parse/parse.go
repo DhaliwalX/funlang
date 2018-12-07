@@ -4,7 +4,6 @@ import (
     "bitbucket.org/dhaliwalprince/funlang/ast"
     "bitbucket.org/dhaliwalprince/funlang/context"
     "bitbucket.org/dhaliwalprince/funlang/lex"
-    "fmt"
 )
 
 type Parser struct {
@@ -13,18 +12,6 @@ type Parser struct {
     errs errorList
     ctx *context.Context
     builder *ast.Builder
-
-    topScope *ast.Scope
-    scopes map[ast.Node]*ast.Scope
-    unresolved []*ast.Identifier
-}
-
-func (parser *Parser) openScope() {
-    parser.topScope = ast.NewScope(parser.topScope)
-}
-
-func (parser *Parser) closeScope() {
-    parser.topScope = parser.topScope.Outer()
 }
 
 func (parser *Parser) advance() {
@@ -46,7 +33,6 @@ func NewParserFromString(ctx *context.Context, source string) *Parser {
 
 func (parser *Parser) Parse() (*ast.Program, error) {
     parser.advance()
-    parser.openScope()
 
     decls := []ast.Node{}
     for {
@@ -60,26 +46,7 @@ func (parser *Parser) Parse() (*ast.Program, error) {
 
         decls = append(decls, a)
     }
-    parser.closeScope()
     return ast.NewProgram(parser.ctx, parser.lex.Source(), decls), nil
-}
-
-func newAlreadyDefinedError(o *ast.Object, n ast.Node) error {
-    return fmt.Errorf("%s is already defined at %s (duplicate definition at %s)", o.Name, o.Pos, n.Beg())
-}
-
-func (parser *Parser) resolve(node ast.Node) *ast.Object {
-    ident, isIdent := node.(*ast.Identifier)
-    if !isIdent {
-        return nil
-    }
-
-    o := &ast.Object{Name:ident.Name(), Kind:ast.VAR, Decl:ident}
-    old := parser.topScope.PutStrict(ident.Name(), o)
-    if old != nil {
-        return old
-    }
-    return o
 }
 
 /*

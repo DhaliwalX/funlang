@@ -57,6 +57,10 @@ type ArgumentList struct {
     exprs []Expression
 }
 
+func (list *ArgumentList) Exprs() []Expression {
+    return list.exprs
+}
+
 type MemberExpression struct {
     pos    lex.Position
     token  lex.TokenType
@@ -70,11 +74,27 @@ type PrefixExpression struct {
     x   Expression
 }
 
+func (p *PrefixExpression) Op() lex.TokenType {
+    return p.op
+}
+
+func (p *PrefixExpression) Expression() Expression {
+    return p.x
+}
+
 type PostfixExpression struct {
     pos lex.Position
     end lex.Position
     op  lex.TokenType
     x   Expression
+}
+
+func (p *PostfixExpression) Op() lex.TokenType {
+    return p.op
+}
+
+func (p *PostfixExpression) Expression() Expression {
+    return p.x
 }
 
 type BinaryExpression struct {
@@ -97,9 +117,25 @@ type ArrayType struct {
     t Expression
 }
 
+func (a *ArrayType) Type() Expression {
+    return a.t
+}
+
+func (a *ArrayType) Size() Expression {
+    return a.size
+}
+
 type Field struct {
     name Expression
     t Expression
+}
+
+func (f *Field) Name() string {
+    return f.name.(*Identifier).Name()
+}
+
+func (f *Field) Type() Expression {
+    return f.t
 }
 
 type StructType struct {
@@ -107,11 +143,24 @@ type StructType struct {
     fields []*Field
 }
 
+func (s *StructType) Fields() []*Field {
+    return s.fields
+}
+
 type FuncType struct {
     pos lex.Position
     params []Expression
     ret Expression
 }
+
+func (f *FuncType) Params() []Expression {
+    return f.params
+}
+
+func (f *FuncType) Return() Expression {
+    return f.ret
+}
+
 
 func (*NilLiteral) expr() {}
 func (*NumericLiteral) expr() {}
@@ -280,6 +329,27 @@ func (m *MemberExpression) Expr() Expression {
     return m.x
 }
 
+func (m *MemberExpression) AccessKind() lex.TokenType {
+    return m.token
+}
+
 func (i *Identifier) Name() string {
     return i.name
+}
+
+func (b *BinaryExpression) Left() Expression {
+    return b.left
+}
+
+func (b *BinaryExpression) Right() Expression {
+    return b.right
+}
+
+
+func (a *AssignExpression) Left() Expression {
+    return a.left
+}
+
+func (a *AssignExpression) Right() Expression {
+    return a.right
 }
