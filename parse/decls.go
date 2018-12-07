@@ -24,7 +24,12 @@ func (parser *Parser) parseDeclarationEpilogue() ast.DeclNode {
         parser.advance()
     }
     init := parser.parseAssignExpression()
-    return parser.builder.NewDeclaration(pos, v.String(), t, init)
+    node := parser.builder.NewDeclaration(pos, v.String(), t, init)
+    if o := parser.topScope.PutStrict(v.Name(), &ast.Object{Name:v.Name(), Kind:ast.VAR, Decl:v, Type:t}); o != nil {
+        parser.errs.append(newAlreadyDefinedError(o, node))
+        return nil
+    }
+    return node
 }
 
 func (parser *Parser) parseDeclaration() ast.DeclNode {

@@ -129,67 +129,6 @@ func (*Field) expr() {}
 func (*StructType) expr() {}
 func (*FuncType) expr() {}
 
-// support for visitor
-func (l *NilLiteral) Accept(visitor Visitor) {
-    visitor.VisitNilLiteral(l)
-}
-
-func (n *NumericLiteral) Accept(visitor Visitor) {
-    visitor.VisitNumericLiteral(n)
-}
-
-func (s *StringLiteral) Accept(visitor Visitor) {
-    visitor.VisitStringLiteral(s)
-}
-
-func (b *BooleanLiteral) Accept(visitor Visitor) {
-    visitor.VisitBooleanLiteral(b)
-}
-
-func (i *Identifier) Accept(visitor Visitor) {
-    visitor.VisitIdentifier(i)
-}
-
-func (a *ArgumentList) Accept(visitor Visitor) {
-    visitor.VisitArgumentList(a)
-}
-
-func (m *MemberExpression) Accept(visitor Visitor) {
-    visitor.VisitMemberExpression(m)
-}
-
-func (p *PrefixExpression) Accept(visitor Visitor) {
-    visitor.VisitPrefixExpression(p)
-}
-
-func (p *PostfixExpression) Accept(visitor Visitor) {
-    visitor.VisitPostfixExpression(p)
-}
-
-func (b *BinaryExpression) Accept(visitor Visitor) {
-    visitor.VisitBinaryExpression(b)
-}
-
-func (a *AssignExpression) Accept(visitor Visitor) {
-    visitor.VisitAssignExpression(a)
-}
-
-func (a *ArrayType) Accept(visitor Visitor) {
-    visitor.VisitArrayType(a)
-}
-
-func (f *Field) Accept(visitor Visitor) {
-    visitor.VisitField(f)
-}
-
-func (s *StructType) Accept(visitor Visitor) {
-    visitor.VisitStructType(s)
-}
-
-func (f *FuncType) Accept(visitor Visitor) {
-    visitor.VisitFuncType(f)
-}
-
 func (n *NilLiteral) Beg() lex.Position { return n.pos }
 func (n *NilLiteral) End() lex.Position {
     return lex.Position{Col:n.pos.Col+3,Row:n.pos.Row}
@@ -327,4 +266,20 @@ func (s *StructType) String() string {
 
     builder.WriteString("}")
     return builder.String()
+}
+
+func (a *ArgumentList) List() []Expression {
+    return a.exprs
+}
+
+func (m *MemberExpression) Member() Expression {
+    return m.member
+}
+
+func (m *MemberExpression) Expr() Expression {
+    return m.x
+}
+
+func (i *Identifier) Name() string {
+    return i.name
 }

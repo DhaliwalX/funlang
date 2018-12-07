@@ -47,6 +47,7 @@ func (parser *Parser) parseFunction() ast.Statement {
 		return nil
 	}
 
+	parser.openScope()
 	parser.advance()
 	// parse arguments
 	params := []ast.DeclNode{}
@@ -76,7 +77,13 @@ func (parser *Parser) parseFunction() ast.Statement {
 		return nil
 	}
 
-	return parser.builder.NewFunctionStatement(proto, body.(*ast.BlockStatement))
+	parser.closeScope()
+	fun := parser.builder.NewFunctionStatement(proto, body.(*ast.BlockStatement))
+	o := parser.topScope.PutStrict(name, &ast.Object{Kind:ast.FUNC, Func:fun, Pos: pos})
+	if o != nil {
+		parser.errs.append(newAlreadyDefinedError(o, fun))
+	}
+	return fun
 }
 
 func (parser *Parser) parseIfStatement() ast.Statement {

@@ -85,7 +85,7 @@ func (b *Builder) NewDeclaration(pos lex.Position, name string, t Expression,
 	return &Declaration{pos:pos, name:name, t:t, init:init}
 }
 
-func (b *Builder) NewDeclarationList(pos lex.Position, decls []Declaration) *DeclarationList {
+func (b *Builder) NewDeclarationList(pos lex.Position, decls []*Declaration) *DeclarationList {
 	return &DeclarationList{pos:pos, decls:decls}
 }
 

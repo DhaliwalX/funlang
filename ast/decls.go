@@ -19,7 +19,7 @@ type Declaration struct {
 
 type DeclarationList struct {
 	pos lex.Position
-	decls []Declaration
+	decls []*Declaration
 }
 
 type TypeDeclaration struct {
@@ -32,18 +32,6 @@ type TypeDeclaration struct {
 func (*Declaration) decl() {}
 func (*DeclarationList) decl() {}
 func (*TypeDeclaration) decl() {}
-
-func (d *Declaration) Accept(visitor Visitor) {
-	visitor.VisitDeclaration(d)
-}
-
-func (d *DeclarationList) Accept(visitor Visitor) {
-	visitor.VisitDeclarationList(d)
-}
-
-func (t *TypeDeclaration) Accept(visitor Visitor) {
-	visitor.VisitTypeDeclaration(t)
-}
 
 func (d *DeclarationList) Beg() lex.Position { return d.pos }
 func (d *DeclarationList) End() lex.Position {
