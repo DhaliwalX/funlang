@@ -16,7 +16,7 @@ func newParseError(token lex.Token, message string) parseError {
 }
 
 func (e parseError) Error() string {
-	return fmt.Sprintf("%d:%d:%s (%s)", e.token.Begin(), e.token.End(), e.message, e.token.Value())
+	return fmt.Sprintf("%d:%d: %s (%s)", e.token.Begin().Row, e.token.Begin().Col, e.message, e.token.Value())
 }
 
 func unexpectedToken(t lex.Token, expected lex.TokenType) error {

@@ -9,13 +9,21 @@ import (
 
 func TestResolve(t *testing.T) {
 	ctx := &context.Context{}
-	parser := parse.NewParserFromString(ctx, `
-var a int = 10;
-var a = 10;
-var c = "string";
-var x Struct;
+	parser := parse.NewParserFromString(ctx, `var x Struct;
+type int int
+type float float
+type string string
+
 type Struct struct {
-	hello int
+	hello string
+}
+
+func Hello(a string) {
+	x.hello = a;
+}
+
+func some(a int, b float) string {
+	return a+b;
 }
 `)
 	ast, err := parser.Parse()
@@ -24,8 +32,7 @@ type Struct struct {
 		return
 	}
 
-	r := resolver{}
-	r.openScope()
+	t.Log(ast)
 	errs := ResolveProgram(ast)
 	if len(errs) != 0 {
 		t.Error(fmt.Sprintf("len(errs) > 0:\n%s", errs))

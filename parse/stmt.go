@@ -59,7 +59,8 @@ func (parser *Parser) parseFunction() ast.Statement {
 		if decl == nil {
 			return nil
 		}
-		if parser.current.Type() != lex.COMMA && parser.current.Type() == lex.RPAREN {
+		if parser.current.Type() == lex.RPAREN {
+			params = append(params, decl)
 			parser.advance()
 			break
 		}
@@ -68,6 +69,8 @@ func (parser *Parser) parseFunction() ast.Statement {
 			parser.errs.append(unexpectedToken(parser.current, lex.RPAREN))
 			return nil
 		}
+
+		parser.advance()
 
 		params = append(params, decl)
 	}
@@ -203,6 +206,14 @@ func (parser *Parser) parseStatement() ast.Statement {
 	default:
 		return parser.parseExpressionStatement()
 	}
+}
+
+func (parser *Parser) parseDeclarationOrStatement() ast.Node {
+	if parser.current.Type() == lex.VAR {
+		return parser.parseDeclarationStatement()
+	}
+
+	return parser.parseStatement()
 }
 
 func (parser *Parser) parseTopLevelNode() ast.Node {

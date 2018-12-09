@@ -23,7 +23,9 @@ func (parser *Parser) parseDeclarationEpilogue() ast.DeclNode {
     if parser.current.Type() == lex.ASSIGN {
         parser.advance()
     }
-    if parser.current.Type() == lex.SEMICOLON {
+    if parser.current.Type() == lex.SEMICOLON  ||
+        parser.current.Type() == lex.COMMA ||
+        parser.current.Type() == lex.RPAREN {
         return parser.builder.NewDeclaration(pos, v.String(), t, nil)
     }
     init := parser.parseAssignExpression()

@@ -46,7 +46,7 @@ func ResolveProgram(program *ast.Program) []error {
 
 	for _, unresolved := range r.unresolved {
 		o := r.resolve(unresolved.Name(), nil)
-		if o != nil {
+		if o == nil {
 			r.appendError(fmt.Errorf("%s: %s undefined", unresolved.Beg(), unresolved.Name()))
 		}
 	}

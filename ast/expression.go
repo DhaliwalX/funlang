@@ -322,11 +322,11 @@ func (a *ArgumentList) List() []Expression {
 }
 
 func (m *MemberExpression) Member() Expression {
-    return m.member
+    return m.x
 }
 
 func (m *MemberExpression) Expr() Expression {
-    return m.x
+    return m.member
 }
 
 func (m *MemberExpression) AccessKind() lex.TokenType {
