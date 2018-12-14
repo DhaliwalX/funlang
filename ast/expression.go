@@ -2,6 +2,7 @@ package ast
 
 import (
     "bitbucket.org/dhaliwalprince/funlang/lex"
+    "bitbucket.org/dhaliwalprince/funlang/types"
     "fmt"
     "strings"
 )
@@ -42,9 +43,30 @@ type StructLiteral struct {
     props []StructProp
 }
 
+
+type ObjKind int
+
+const (
+    DONT_KNOW ObjKind = iota
+    TYPE
+    VAR
+    FUNC
+)
+
+
+type Object struct {
+    Kind ObjKind
+    Name string
+    Type interface{}
+    Decl interface{}
+    Pos lex.Position
+}
+
+
 type Identifier struct {
     pos lex.Position
     name string
+    Object *Object
 }
 
 type BooleanLiteral struct {
@@ -115,6 +137,7 @@ type ArrayType struct {
     pos lex.Position
     size Expression
     t Expression
+    arrayType types.Type
 }
 
 func (a *ArrayType) Type() Expression {
@@ -132,10 +155,6 @@ type Field struct {
 
 func (f *Field) Name() string {
     return f.name.(*Identifier).Name()
-}
-
-func (f *Field) Type() Expression {
-    return f.t
 }
 
 type StructType struct {
@@ -163,19 +182,35 @@ func (f *FuncType) Return() Expression {
 
 
 func (*NilLiteral) expr() {}
+
 func (*NumericLiteral) expr() {}
+
 func (*StringLiteral) expr() {}
+
 func (*BooleanLiteral) expr() {}
+
 func (*Identifier) expr() {}
+
 func (*ArgumentList) expr() {}
+func (a *ArgumentList) Type() types.Type { return nil }
+
 func (*MemberExpression) expr() {}
+
 func (*PrefixExpression) expr() {}
+
 func (*PostfixExpression) expr() {}
+
 func (*BinaryExpression) expr() {}
+
 func (*AssignExpression) expr() {}
+
 func (*ArrayType) expr() {}
+
 func (*Field) expr() {}
+func (f *Field) Type() Expression { return f.t }
+
 func (*StructType) expr() {}
+
 func (*FuncType) expr() {}
 
 func (n *NilLiteral) Beg() lex.Position { return n.pos }

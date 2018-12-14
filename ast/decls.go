@@ -49,6 +49,10 @@ func (t *TypeDeclaration) Name() string {
 	return t.name.(*Identifier).Name()
 }
 
+func (t *TypeDeclaration) Ident() *Identifier {
+	return t.name.(*Identifier)
+}
+
 func (*Declaration) decl() {}
 func (*DeclarationList) decl() {}
 func (*TypeDeclaration) decl() {}

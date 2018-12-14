@@ -35,7 +35,7 @@ func (b *Builder) NewBooleanLiteral(pos lex.Position, val bool) *BooleanLiteral 
 }
 
 func (b *Builder) NewIdentifier(pos lex.Position, name string) *Identifier {
-	return &Identifier{pos, name}
+	return &Identifier{pos, name, nil}
 }
 
 func (b *Builder) NewArgumentList(pos lex.Position, args []Expression) *ArgumentList {
@@ -119,4 +119,8 @@ func (b *Builder) NewReturnStatement(pos lex.Position, expr Expression) *ReturnS
 
 func (b *Builder) NewBlockStatement(list []Statement) *BlockStatement {
 	return &BlockStatement{stmts: list}
+}
+
+func (b *Builder) NewDeclarationStatement(decl DeclNode) *DeclarationStatement {
+	return &DeclarationStatement{decl}
 }

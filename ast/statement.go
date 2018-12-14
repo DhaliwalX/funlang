@@ -111,6 +111,10 @@ func (r *ReturnStatement) Expression() Expression {
 	return r.expr
 }
 
+type DeclarationStatement struct {
+	decl DeclNode
+}
+
 func (*BlockStatement) stmt() {}
 func (*ForStatement) stmt() {}
 func (*ExpressionStmt) stmt() {}
@@ -118,6 +122,7 @@ func (*FunctionProtoType) stmt() {}
 func (*FunctionStatement) stmt() {}
 func (*IfElseStatement) stmt() {}
 func (*ReturnStatement) stmt() {}
+func (*DeclarationStatement) stmt() {}
 
 func (b *BlockStatement) Beg() lex.Position { return b.pos }
 func (b *BlockStatement) End() lex.Position { return b.end }
@@ -139,6 +144,9 @@ func (i *IfElseStatement) End() lex.Position { return i.body.End() }
 
 func (r *ReturnStatement) Beg() lex.Position { return r.pos }
 func (r *ReturnStatement) End() lex.Position { return r.expr.End() }
+
+func (r *DeclarationStatement) Beg() lex.Position { return r.decl.Beg() }
+func (r *DeclarationStatement) End() lex.Position { return r.decl.End() }
 
 func (b *BlockStatement) String() string {
 	builder := strings.Builder{}
@@ -180,6 +188,14 @@ func (f *FunctionProtoType) String() string {
 
 	builder.WriteString(fmt.Sprintf(") %s", f.ret))
 	return builder.String()
+}
+
+func (d *DeclarationStatement) String() string {
+	return fmt.Sprintf("%s%s", d.decl, ";")
+}
+
+func (d *DeclarationStatement) Decl() DeclNode {
+	return d.decl
 }
 
 func (b *BlockStatement) Len() int {

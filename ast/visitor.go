@@ -1,5 +1,7 @@
 package ast
 
+import "fmt"
+
 type _Visitor interface {
 	VisitNilLiteral(*NilLiteral)
 	VisitNumericLiteral(*NumericLiteral)
@@ -78,8 +80,12 @@ func Walk(v Visitor, node Node) {
 		Walk(v, n.ret)
 
 	case *Declaration:
-		Walk(v, n.t)
-		Walk(v, n.t)
+		if n.t != nil {
+			Walk(v, n.t)
+		}
+		if n.init != nil {
+			Walk(v, n.init)
+		}
 
 	case *DeclarationList:
 		for _, decl := range n.decls {
@@ -124,11 +130,24 @@ func Walk(v Visitor, node Node) {
 	case *ReturnStatement:
 		Walk(v, n.expr)
 
+	case *DeclarationStatement:
+		Walk(v, n.decl)
+
 	case *Field:
 		Walk(v, n.name)
 		Walk(v, n.t)
+
+	case *Program:
+		for _, decl := range n.decls {
+			Walk(v, decl)
+		}
+
+	case *NumericLiteral:
+	case *StringLiteral:
+	case *BooleanLiteral:
+		func(){}()
 	default:
-		panic("didn't expect this type")
+		panic(fmt.Sprintf("didn't expect this type, %T", n))
 	}
 
 }

@@ -171,7 +171,7 @@ func (parser *Parser) parseBlockStatement() ast.Statement {
 	return parser.builder.NewBlockStatement(list)
 }
 
-func (parser *Parser) parseDeclarationStatement() ast.DeclNode {
+func (parser *Parser) parseDeclarationStatement() ast.Statement {
 	declNode := parser.parseDeclaration()
 	if declNode == nil {
 		return nil
@@ -183,7 +183,7 @@ func (parser *Parser) parseDeclarationStatement() ast.DeclNode {
 	}
 
 	parser.advance()
-	return declNode
+	return parser.builder.NewDeclarationStatement(declNode)
 }
 
 func (parser *Parser) parseStatement() ast.Statement {
@@ -203,17 +203,12 @@ func (parser *Parser) parseStatement() ast.Statement {
 	case lex.LBRACE:
 		return parser.parseBlockStatement()
 
+	case lex.VAR:
+		return parser.parseDeclarationStatement()
+
 	default:
 		return parser.parseExpressionStatement()
 	}
-}
-
-func (parser *Parser) parseDeclarationOrStatement() ast.Node {
-	if parser.current.Type() == lex.VAR {
-		return parser.parseDeclarationStatement()
-	}
-
-	return parser.parseStatement()
 }
 
 func (parser *Parser) parseTopLevelNode() ast.Node {
