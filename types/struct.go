@@ -37,6 +37,11 @@ func (s *structType) Name() string {
     return builder.String()
 }
 
+
+func (s *structType) String() string {
+    return s.Name()
+}
+
 func (s *structType) LenFields() int {
     return len(s.elems)
 }

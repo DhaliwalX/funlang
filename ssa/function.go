@@ -38,11 +38,11 @@ type Function struct {
 
 	Blocks []*BasicBlock
 	t types.Type
-	Args []*Argument
+	Args map[string]*Argument
 
-	// these fields are required while creating
+	// these fields are required while creating ssa
 	current *BasicBlock
-
+	locals map[string]Value
 }
 
 func (f *Function) Uses() []Value {
@@ -61,15 +61,22 @@ func (f *Function) ShortString() string {
 	return fmt.Sprintf("%%%s", f.Name())
 }
 
+func (f *Function) GetArg(name string) *Argument {
+	return f.Args[name]
+}
+
+
 func (f *Function) String() string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s %s(", types.ToFunctionType(f.t).ReturnType(), f.Name()))
 	l := len(f.Args)
-	for i, arg := range f.Args {
+	i := 0
+	for _, arg := range f.Args {
 		builder.WriteString(arg.String())
 		if i+1 == l {
 			break
 		}
+		i++
 		builder.WriteString(", ")
 	}
 

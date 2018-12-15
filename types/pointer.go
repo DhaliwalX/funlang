@@ -22,6 +22,10 @@ func (t *pointerType) Name() string {
     return fmt.Sprintf("{%s}", t.Elem().Name())
 }
 
+func (t *pointerType) String() string {
+    return t.Name()
+}
+
 func ToPointerType(t Type) *pointerType {
     return t.(*pointerType)
 }

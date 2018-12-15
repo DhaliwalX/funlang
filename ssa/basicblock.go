@@ -39,7 +39,7 @@ func (b *BasicBlock) String() string {
 	builder.WriteString(b.Name())
 	builder.WriteString(":\n")
 	for _, instr := range b.instrs {
-		builder.WriteString(instr.String())
+		builder.WriteString("\t"+instr.String())
 		builder.WriteString("\n")
 	}
 	return builder.String()

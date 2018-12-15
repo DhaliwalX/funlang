@@ -2,6 +2,7 @@ package ssa
 
 import (
 	"bitbucket.org/dhaliwalprince/funlang/ast"
+	"bitbucket.org/dhaliwalprince/funlang/context"
 	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"bitbucket.org/dhaliwalprince/funlang/types"
 	"fmt"
@@ -21,7 +22,7 @@ type transformer struct {
 	// name of temporaries
 	counter int
 
-	locals map[*ast.Identifier]Value
+	types map[string]types.Type
 
 	address bool
 }
@@ -47,6 +48,7 @@ func isArray(val Value) bool {
 }
 
 func (t *transformer) nextTemp() string {
+	t.counter++
 	return "t"+fmt.Sprint(t.counter)
 }
 
@@ -81,7 +83,7 @@ func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
 		panic("destination should be a struct with address")
 	}
 
-	meTy := val.Type().Elem().Field(member.Value)
+	meTy := t.factory.PointerType(val.Type().Elem().Field(member.Value))
 
 	return &MemberInstr{t: meTy,
 		instrWithOperands: instrWithOperands{operands: []Value{val, member}},
@@ -164,6 +166,25 @@ func (t *transformer) call(f *Function, args ...Value) *CallInstr {
 	}
 }
 
+func (t *transformer) ret(val Value) *RetInstr {
+	retType := types.ToFunctionType(t.function.Type()).ReturnType()
+	if val == nil {
+		if retType != nil {
+			panic("return cannot be nil for functions with non-nil return type ")
+		} else {
+			return &RetInstr{}
+		}
+	}
+
+	if val.Type() != retType {
+		panic("return value type does not match with functions return type: "+t.function.name)
+	} else {
+		return &RetInstr{
+			instrWithOperands:instrWithOperands{operands:[]Value{val}},
+		}
+	}
+}
+
 func (t *transformer) phi(edges []*PhiEdge) *PhiNode {
 	return &PhiNode{Edges:edges, valueWithName:valueWithName{name:t.nextTemp()}}
 }
@@ -174,11 +195,28 @@ func (t *transformer) astError(node ast.Node, message string) {
 }
 
 func (t *transformer) valueOf(i *ast.Identifier) Value {
-	v, ok := t.locals[i]
+	v, ok := t.function.locals[i.Name()]
 	if !ok {
+		if i.Object == nil {
+			panic("unreachable code")
+		}
+
+		if i.Object.Decl == nil {
+			t.astError(i, i.Name()+" without declaration")
+		}
+
 		v, ok = t.program.Globals[i.Name()]
 		if !ok {
-			t.astError(i, "undefined variable")
+			v, ok = t.function.Args[i.Name()]
+			// create a local copy of the argument and store it in locals
+			if !ok {
+				t.astError(i, "undefined variable")
+			}
+
+			emit := t.emit(t.alloc(v.Type()))
+			t.function.locals[i.Name()] = emit
+			t.emit(t.store(emit, v))
+			return emit
 		}
 	}
 
@@ -206,7 +244,7 @@ func (t *transformer) emitLiteral(node ast.Node) Value {
 		if t.address {
 			return t.valueOf(n)
 		} else {
-			return t.load(t.valueOf(n))
+			return t.emit(t.load(t.valueOf(n)))
 		}
 
 	case *ast.BooleanLiteral:
@@ -263,7 +301,12 @@ func (t *transformer) emitMemberExpresion(m *ast.MemberExpression) Value {
 	}
 
 	t.address = old
-	return v
+
+	if t.address {
+		return t.emit(v)
+	} else {
+		return t.emit(t.load(v))
+	}
 }
 
 func (t *transformer) emitPrefixExpression(p *ast.PrefixExpression) Value {
@@ -327,15 +370,19 @@ func (t *transformer) emitBinaryExpression(e *ast.BinaryExpression) Value {
 	l := t.emitExpression(e.Left())
 	r := t.emitExpression(e.Right())
 	t.address = old
-	return t.emit(t.arith(t.mapOp(e.Op()), l, r))
+	v := t.arith(t.mapOp(e.Op()), l, r)
+	if v.Tag() != INSTRUCTION {
+		return v
+	}
+	return t.emit(v)
 }
 
 func (t *transformer) emitAssignExpression(e *ast.AssignExpression) Value {
 	old := t.address
 	t.address = false
-	r := t.emitExpression(e.Left())
+	r := t.emitExpression(e.Right())
 	t.address = true
-	l := t.emitExpression(e.Right())
+	l := t.emitExpression(e.Left())
 	t.address = old
 	return t.emit(t.store(l, r))
 }
@@ -343,8 +390,11 @@ func (t *transformer) emitAssignExpression(e *ast.AssignExpression) Value {
 func (t *transformer) emitExpression(e ast.Expression) Value {
 	switch n := e.(type) {
 	case *ast.NumericLiteral:
+		return t.emitLiteral(n)
 	case *ast.StringLiteral:
+		return t.emitLiteral(n)
 	case *ast.BooleanLiteral:
+		return t.emitLiteral(n)
 	case *ast.Identifier:
 		return t.emitLiteral(e)
 	case *ast.MemberExpression:
@@ -363,18 +413,217 @@ func (t *transformer) emitExpression(e ast.Expression) Value {
 	panic(fmt.Sprintf("Unknown expr type: %T", e))
 }
 
+func (t *transformer) resolveType(typeExpr ast.Expression) types.Type {
+	switch n := typeExpr.(type) {
+	case *ast.ArrayType:
+		return t.factory.ArrayType(t.resolveType(n.Type()))
+
+	case *ast.StructType:
+		fields := make(map[string]types.Type)
+		for _, field := range n.Fields() {
+			fieldTy := t.resolveType(field.Type())
+			fields[field.Name()] = fieldTy
+		}
+
+		return t.factory.StructType(fields)
+
+	case *ast.FuncType:
+		retType := t.resolveType(n.Return())
+		argTypes := []types.Type{}
+		for _, argType := range n.Params() {
+			argTy := t.resolveType(argType)
+			argTypes = append(argTypes, argTy)
+		}
+
+		return t.factory.FunctionType(retType, argTypes)
+
+	case *ast.Identifier:
+		switch n.Name() {
+		case "string":
+			return t.factory.StringType()
+
+		case "int":
+			return t.factory.IntType()
+
+		case "bool":
+			return t.factory.IntType()
+
+		default:
+			if ty, ok := t.types[n.Name()]; ok {
+				return ty
+			} else if n.Object == nil || n.Object.Type == nil {
+				panic("unable to resolve type for "+n.Name()+" at "+n.Beg().String())
+			} else {
+				// try to resolve this type
+				tr := t.resolveType(n.Object.Type.(ast.Expression))
+				t.types[n.Name()] = tr
+				return tr
+			}
+		}
+	}
+
+	panic("unknown type found")
+}
+
 func (t *transformer) emitDeclaration(e ast.DeclNode) Value {
 	switch n := e.(type) {
 	case *ast.Declaration:
+		if n.Type() == nil {
+			old := t.address
+			t.address = false
+			init := t.emitExpression(n.Init())
+			t.address = old
+			alloc := t.emit(t.alloc(init.Type()))
+			t.function.locals[n.Name()] = alloc
+			t.emit(t.store(alloc, init))
+		} else {
+			old := t.address
+			t.address = false
+			ty := t.resolveType(n.Type())
+			alloc := t.emit(t.alloc(ty))
+			if n.Init() != nil {
+				init := t.emitExpression(n.Init())
+				t.emit(t.store(alloc, init))
+			}
+			t.function.locals[n.Name()] = alloc
+			t.address = old
+		}
+		return nil
 
+	case *ast.TypeDeclaration:
+		ty := t.resolveType(n.Type())
+		t.program.Types[n.Name()] = ty
+		return nil
 	}
+
+	panic("unknown declaration"+fmt.Sprintf("%T", e))
+}
+
+func (t *transformer) resolveFunctionSignature(f *ast.FunctionProtoType) types.Type {
+	argTypes := []types.Type{}
+	for _, arg := range f.Params() {
+		argTypes = append(argTypes, t.resolveType(arg.(*ast.Declaration).Type()))
+	}
+
+	retType := t.resolveType(f.Return())
+	return t.factory.FunctionType(retType, argTypes)
+}
+
+func (t *transformer) emitFunction(f *ast.FunctionStatement) {
+	f.Proto()
+	fun := &Function{}
+	fun.name = f.Proto().Name()
+	fun.t = t.resolveFunctionSignature(f.Proto())
+	fun.locals = make(map[string]Value)
+	args := make(map[string]*Argument)
+	for _, ar := range f.Proto().Params() {
+		decl := ar.(*ast.Declaration)
+		argType := t.resolveType(decl.Type())
+		args[decl.Name()] = &Argument{valueWithName: valueWithName{name:decl.Name()}, t:argType}
+	}
+
+	fun.Args = args
+	entryBlock := &BasicBlock{ Parent:fun, valueWithName:valueWithName{name:"entry."+fun.name}}
+	fun.Blocks = []*BasicBlock{entryBlock}
+	fun.current = entryBlock
+	// emit function body
+	t.function = fun
+	t.counter = 0
+	t.Visit(f.Body())
+	t.program.Globals[fun.name] = fun
+}
+
+func (t *transformer) emitReturn(x ast.Expression) {
+	old := t.address
+	t.address = false
+	var val Value
+	if x != nil {
+		val = t.emitExpression(x)
+	}
+	t.address = old
+	t.emit(t.ret(val))
+}
+
+func (t *transformer) emitIfElseStatement(e *ast.IfElseStatement) {
+	cond := t.emitExpression(e.Condition())
+	label := t.nextTemp()
+	onTrue := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name:"if.true."+label}}
+	onFalse := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name:"if.false."+label}}
+	done := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{onTrue, onFalse},
+		valueWithName: valueWithName{name:"if.done."+label}}
+
+	t.emit(t.gotoif(cond, onTrue, onFalse))
+	t.function.current = onTrue
+	t.Visit(e.Body())
+	t.emit(t.goTo(done))
+	t.function.Blocks = append(t.function.Blocks, onTrue)
+
+	t.function.current = onFalse
+	if e.ElseNode() != nil {
+		t.Visit(e.ElseNode())
+	}
+	t.emit(t.goTo(done))
+	t.function.Blocks = append(t.function.Blocks, onFalse)
+
+	t.function.current = done
+	t.function.Blocks = append(t.function.Blocks, done)
 }
 
 func (t *transformer) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
+	case *ast.DeclarationStatement:
+		t.emitDeclaration(n.Decl())
+
+	case *ast.ExpressionStmt:
+		t.emitExpression(n.Expr())
+
+	case *ast.FunctionStatement:
+		t.emitFunction(n)
+
+	case *ast.BlockStatement:
+		for _, stmt := range n.Statements() {
+			t.Visit(stmt)
+		}
+
+	case *ast.ReturnStatement:
+		t.emitReturn(n.Expression())
+
+	case *ast.IfElseStatement:
+		t.emitIfElseStatement(n)
 	default:
 		panic(n)
 	}
 
 	return nil
+}
+
+func Emit(program *ast.Program, ctx *context.Context) *Program {
+	p := &Program{Types: make(map[string]types.Type), Globals: make(map[string]Value)}
+	t := transformer{program:p,
+		factory: types.NewFactory(ctx),
+		types: make(map[string]types.Type),
+	}
+	for _, decl := range program.Decls() {
+		switch n := decl.(type) {
+		case *ast.DeclarationStatement:
+			if td, ok := n.Decl().(*ast.TypeDeclaration); !ok {
+				panic("only type declaration and functions are allowed on global scope")
+			} else {
+				t.emitDeclaration(td)
+			}
+
+		case *ast.TypeDeclaration:
+			t.emitDeclaration(n)
+
+		case *ast.FunctionStatement:
+			t.emitFunction(n)
+
+		default:
+			t.astError(n, "unknown expression on global level "+fmt.Sprint(n))
+		}
+	}
+
+	return p
 }

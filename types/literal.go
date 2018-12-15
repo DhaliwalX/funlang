@@ -21,7 +21,15 @@ func (t *intType) Name() string {
     return "int"
 }
 
+func (t *intType) String() string {
+    return t.Name()
+}
+
 type floatType struct {}
+
+func (t *floatType) String() string {
+    return t.Name()
+}
 
 func (t *floatType) Elem() Type {
     return nil
@@ -41,6 +49,9 @@ func (t *floatType) Name() string {
 
 type stringType struct {}
 
+func (t *stringType) String() string {
+    return t.Name()
+}
 func (t *stringType) Name() string {
     return "string"
 }

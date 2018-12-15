@@ -99,7 +99,7 @@ func (a *AllocInstr) String() string {
 }
 
 func (l *LoadInstr) Type() types.Type {
-	return l.Operand(1).Type().Elem()
+	return l.Operand(0).Type().Elem()
 }
 
 func (l *LoadInstr) ShortString() string {
@@ -107,7 +107,7 @@ func (l *LoadInstr) ShortString() string {
 }
 
 func (l *LoadInstr) String() string {
-	return fmt.Sprintf("%s:%s = %s", l.ShortString(), l.Operand(0).ShortString())
+	return fmt.Sprintf("%s = *%s", l.ShortString(), l.Operand(0).ShortString())
 }
 
 func (s *StoreInstr) Type() types.Type {
@@ -119,7 +119,7 @@ func (s *StoreInstr) ShortString() string {
 }
 
 func (s *StoreInstr) String() string {
-	return fmt.Sprintf("%s = %s", s.Operand(0).ShortString(),
+	return fmt.Sprintf("*%s = %s", s.Operand(0).ShortString(),
 		s.Operand(1).ShortString())
 }
 
@@ -163,10 +163,11 @@ type IndexInstr struct {
 	instrWithOperands
 	valueWithName
 	valueWithUsers
+	t types.Type
 }
 
 func (i *IndexInstr) Type() types.Type {
-	return i.Operand(0).Type().Elem()
+	return i.t
 }
 
 func (i *IndexInstr) ShortString() string {
@@ -200,6 +201,43 @@ const (
 	LOR
 )
 
+func (a ArithOpcode) String() string {
+	switch a {
+	case PLUS:
+		return "+"
+
+	case MINUS:
+		return "-"
+
+	case MUL:
+		return "*"
+
+	case DIV:
+		return "/"
+
+	case MOD:
+		return "%"
+
+	case XOR:
+		return "^"
+
+	case AND:
+		return "&"
+
+	case OR:
+		return "|"
+	case LT:
+		return "<"
+
+	case GT:
+		return ">"
+	case EQ:
+		return "=="
+	}
+
+	return "inv"
+}
+
 type ArithInstr struct {
 	valueWithUsers
 	instrNode
@@ -217,7 +255,10 @@ func (a *ArithInstr) ShortString() string {
 }
 
 func (a *ArithInstr) String() string {
-	return fmt.Sprintf("%s = %s",a.Operand(0).ShortString(), a.Operand(1).ShortString())
+	return fmt.Sprintf("%s = %s %s %s", a.ShortString(),
+		a.Operand(0).ShortString(),
+		a.opCode,
+		a.Operand(1).ShortString())
 }
 
 // control flow instructions
@@ -283,6 +324,34 @@ func (c *CallInstr) String() string {
 	}
 	builder.WriteString(")")
 	return builder.String()
+}
+
+type RetInstr struct {
+	instrNode
+	instrWithOperands
+	valueWithNoName
+}
+
+func (r *RetInstr) Type() types.Type {
+	return nil
+}
+
+func (r *RetInstr) Users() []Value {
+	return []Value{}
+}
+
+func (r *RetInstr) AddUser(user Value) {}
+
+func (r *RetInstr) ShortString() string {
+	if len(r.operands) > 0 {
+		return fmt.Sprintf("ret %s", r.operands[0].ShortString())
+	} else {
+		return fmt.Sprintf("ret")
+	}
+}
+
+func (r *RetInstr) String() string {
+	return r.ShortString()
 }
 
 type UnconditionalGoto struct {

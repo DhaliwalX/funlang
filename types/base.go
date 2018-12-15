@@ -28,3 +28,4 @@ type Type interface {
     // Tag returns the type tag
     Tag() TypeTag
 }
+
