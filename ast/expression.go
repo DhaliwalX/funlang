@@ -126,6 +126,10 @@ type BinaryExpression struct {
     right Expression
 }
 
+func (b *BinaryExpression) Op() lex.TokenType {
+    return b.op
+}
+
 type AssignExpression struct {
     pos   lex.Position
     left  Expression

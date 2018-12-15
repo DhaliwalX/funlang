@@ -36,13 +36,13 @@ type Function struct {
 	valueWithName
 	valueWithUsers
 
-	bbs []*BasicBlock
+	Blocks []*BasicBlock
 	t types.Type
-	args []*Argument
-}
+	Args []*Argument
 
-func (f *Function) BasicBlocks() []*BasicBlock {
-	return f.bbs
+	// these fields are required while creating
+	current *BasicBlock
+
 }
 
 func (f *Function) Uses() []Value {
@@ -57,10 +57,6 @@ func (f *Function) Type() types.Type {
 	return f.t
 }
 
-func (f *Function) Arguments() []*Argument {
-	return f.args
-}
-
 func (f *Function) ShortString() string {
 	return fmt.Sprintf("%%%s", f.Name())
 }
@@ -68,8 +64,8 @@ func (f *Function) ShortString() string {
 func (f *Function) String() string {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s %s(", types.ToFunctionType(f.t).ReturnType(), f.Name()))
-	l := len(f.args)
-	for i, arg := range f.args {
+	l := len(f.Args)
+	for i, arg := range f.Args {
 		builder.WriteString(arg.String())
 		if i+1 == l {
 			break
@@ -78,7 +74,7 @@ func (f *Function) String() string {
 	}
 
 	builder.WriteString(") {\n")
-	for _, bb := range f.bbs {
+	for _, bb := range f.Blocks {
 		builder.WriteString(bb.String())
 		builder.WriteString("\n")
 	}

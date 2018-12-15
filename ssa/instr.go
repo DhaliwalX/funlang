@@ -58,7 +58,6 @@ type LoadInstr struct {
 	valueWithUsers
 	instrWithOperands
 	valueWithName
-	t types.Type
 	users []Value
 }
 
@@ -143,10 +142,11 @@ type MemberInstr struct {
 	instrWithOperands
 	valueWithName
 	valueWithUsers
+	t types.Type
 }
 
 func (m *MemberInstr) Type() types.Type {
-	return m.Operand(0).Type().Field(m.Operand(1).(*ConstantString).Value)
+	return m.t
 }
 
 func (m *MemberInstr) ShortString() string {
@@ -311,17 +311,26 @@ func (u *UnconditionalGoto) AddUser(user Value) {
 	return
 }
 
+type PhiEdge struct {
+	Block *BasicBlock
+	Value Value
+}
+
+func (p *PhiEdge) String() string {
+	return fmt.Sprintf("%s <- %s", p.Value.ShortString(), p.Block.ShortString())
+}
+
 // phi node
 // x = phi [x1 <- $b1, x2 <- $b2, ... ]
 type PhiNode struct {
 	instrNode
-	instrWithOperands
 	valueWithName
 	valueWithUsers
+	Edges []*PhiEdge
 }
 
 func (p *PhiNode) Type() types.Type {
-	return p.Operand(0).Type()
+	return p.Edges[0].Value.Type()
 }
 
 func (p *PhiNode) ShortString() string {
@@ -332,9 +341,9 @@ func (p *PhiNode) String() string {
 	base := fmt.Sprintf("%s = phi [", p.ShortString())
 	builder := strings.Builder{}
 	builder.WriteString(base)
-	l := len(p.Operands())
-	for i, n := range p.Operands() {
-		builder.WriteString(n.ShortString())
+	l := len(p.Edges)
+	for i, n := range p.Edges {
+		builder.WriteString(n.String())
 		if i+1 == l {
 			break
 		}

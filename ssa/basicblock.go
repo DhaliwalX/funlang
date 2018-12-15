@@ -8,11 +8,18 @@ import (
 type BasicBlock struct {
 	valueWithUsers
 	valueWithName
-	instrs []Instruction
+	instrs []Value
+
+	Preds, Succs []*BasicBlock
+	Parent *Function
 }
 
-func (b *BasicBlock) Instructions() []Instruction {
+func (b *BasicBlock) Instructions() []Value {
 	return b.instrs
+}
+
+func (b *BasicBlock) appendInstr(val Value) {
+	b.instrs = append(b.instrs, val)
 }
 
 func (b *BasicBlock) Uses() []Value {
