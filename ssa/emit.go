@@ -291,11 +291,12 @@ func (t *transformer) emitMemberExpresion(m *ast.MemberExpression) Value {
 		v = t.index(val, index)
 
 	case lex.LPAREN:
-		t.address = false
+		t.address = true
 		val := t.emitExpression(m.Expr())
 		if val.Tag() != FUNCTION {
 			t.astError(m.Expr(), "not a function")
 		}
+		t.address = false
 		args := t.emitArgs(m.Member())
 		v = t.call(val.(*Function), args...)
 	}
@@ -305,6 +306,9 @@ func (t *transformer) emitMemberExpresion(m *ast.MemberExpression) Value {
 	if t.address {
 		return t.emit(v)
 	} else {
+		if v.Type().Tag() != types.POINTER_TYPE {
+			return t.emit(v)
+		}
 		return t.emit(t.load(v))
 	}
 }
@@ -516,21 +520,29 @@ func (t *transformer) emitFunction(f *ast.FunctionStatement) {
 	fun.t = t.resolveFunctionSignature(f.Proto())
 	fun.locals = make(map[string]Value)
 	args := make(map[string]*Argument)
-	for _, ar := range f.Proto().Params() {
-		decl := ar.(*ast.Declaration)
-		argType := t.resolveType(decl.Type())
-		args[decl.Name()] = &Argument{valueWithName: valueWithName{name:decl.Name()}, t:argType}
-	}
 
-	fun.Args = args
 	entryBlock := &BasicBlock{ Parent:fun, valueWithName:valueWithName{name:"entry."+fun.name}}
 	fun.Blocks = []*BasicBlock{entryBlock}
 	fun.current = entryBlock
-	// emit function body
+	t.program.Globals[fun.name] = fun
 	t.function = fun
 	t.counter = 0
+	for _, ar := range f.Proto().Params() {
+		decl := ar.(*ast.Declaration)
+		argType := t.resolveType(decl.Type())
+		arg := &Argument{valueWithName: valueWithName{name:decl.Name()}, t:argType}
+		args[decl.Name()] = arg
+
+		// we need to copy the arguments to local variables, later optimisations can remove
+		// those local variables and replace them with original arguments
+		emit := t.emit(t.alloc(argType))
+		t.function.locals[decl.Name()] = emit
+		t.emit(t.store(emit, arg))
+	}
+
+	fun.Args = args
+	// emit function body
 	t.Visit(f.Body())
-	t.program.Globals[fun.name] = fun
 }
 
 func (t *transformer) emitReturn(x ast.Expression) {
@@ -571,6 +583,34 @@ func (t *transformer) emitIfElseStatement(e *ast.IfElseStatement) {
 	t.function.Blocks = append(t.function.Blocks, done)
 }
 
+func (t *transformer) emitForStatement(f *ast.ForStatement) {
+	t.emitExpression(f.Init())
+
+	label := t.nextTemp()
+	condBlock := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name:"for.cond."+label}}
+	bodyBlock := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{condBlock},
+		valueWithName: valueWithName{name:"for.body."+label}}
+	done := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{condBlock},
+		valueWithName: valueWithName{name:"for.done."+label}}
+
+	t.emit(t.goTo(condBlock))
+
+	t.function.current = condBlock
+	cond := t.emitExpression(f.Condition())
+	t.emit(t.gotoif(cond, bodyBlock, done))
+
+	t.function.Blocks = append(t.function.Blocks, condBlock)
+
+	t.function.current = bodyBlock
+	t.Visit(f.Body())
+	t.emit(t.goTo(condBlock))
+	t.function.Blocks = append(t.function.Blocks, bodyBlock)
+
+	t.function.current = done
+	t.function.Blocks = append(t.function.Blocks, done)
+}
+
 func (t *transformer) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
 	case *ast.DeclarationStatement:
@@ -592,6 +632,9 @@ func (t *transformer) Visit(node ast.Node) ast.Visitor {
 
 	case *ast.IfElseStatement:
 		t.emitIfElseStatement(n)
+
+	case *ast.ForStatement:
+		t.emitForStatement(n)
 	default:
 		panic(n)
 	}

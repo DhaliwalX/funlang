@@ -25,7 +25,11 @@ func (scope *Scope) Outer() *Scope {
 func (scope *Scope) Lookup(name string) *ast.Object {
 	o, ok := scope.symbols[name]
 	if !ok {
-		return nil
+		if scope.outer != nil {
+			return scope.outer.Lookup(name)
+		} else {
+			return nil
+		}
 	}
 	return o
 }

@@ -16,7 +16,7 @@ func (c *ConstantInt) Uses() []Value {
 }
 
 func (c *ConstantInt) String() string {
-	return fmt.Sprintf("%d:%s", c.Value, c.Type())
+	return fmt.Sprintf("%d", c.Value)
 }
 
 func (c *ConstantInt) ShortString() string {
@@ -38,7 +38,7 @@ type ConstantString struct {
 }
 
 func (c *ConstantString) String() string {
-	return c.Value+":"+fmt.Sprint(c.Type())
+	return c.Value
 }
 
 func (c *ConstantString) ShortString() string {

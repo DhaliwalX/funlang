@@ -91,7 +91,7 @@ func (a *AllocInstr) Type() types.Type {
 }
 
 func (a *AllocInstr) ShortString() string {
-	return fmt.Sprintf("%s:%s", a.Name(), a.Type())
+	return fmt.Sprintf("%s", a.Name())
 }
 
 func (a *AllocInstr) String() string {
@@ -103,7 +103,7 @@ func (l *LoadInstr) Type() types.Type {
 }
 
 func (l *LoadInstr) ShortString() string {
-	return fmt.Sprintf("%s:%s", l.Name(), l.Type())
+	return fmt.Sprintf("%s", l.Name())
 }
 
 func (l *LoadInstr) String() string {
@@ -150,7 +150,7 @@ func (m *MemberInstr) Type() types.Type {
 }
 
 func (m *MemberInstr) ShortString() string {
-	return fmt.Sprintf("%s:%s", m.Name(), m.Type())
+	return fmt.Sprintf("%s", m.Name())
 }
 
 func (m *MemberInstr) String() string {
@@ -171,7 +171,7 @@ func (i *IndexInstr) Type() types.Type {
 }
 
 func (i *IndexInstr) ShortString() string {
-	return fmt.Sprintf("%s:%s", i.Name(), i.Type())
+	return fmt.Sprintf("%s", i.Name())
 }
 
 func (i *IndexInstr) String() string {
@@ -251,7 +251,7 @@ func (a *ArithInstr) Type() types.Type {
 }
 
 func (a *ArithInstr) ShortString() string {
-	return fmt.Sprintf("%s:%s", a.Name(), a.Type())
+	return fmt.Sprintf("%s", a.Name())
 }
 
 func (a *ArithInstr) String() string {
@@ -304,7 +304,7 @@ func (c *CallInstr) Type() types.Type {
 }
 
 func (c *CallInstr) ShortString() string {
-	return fmt.Sprintf("%s:%s", c.Name(), c.Type())
+	return fmt.Sprintf("%s", c.Name())
 }
 
 func (c *CallInstr) String() string {
@@ -403,7 +403,7 @@ func (p *PhiNode) Type() types.Type {
 }
 
 func (p *PhiNode) ShortString() string {
-	return fmt.Sprintf("%s:%s", p.Name(), p.Type())
+	return fmt.Sprintf("%s", p.Name())
 }
 
 func (p *PhiNode) String() string {

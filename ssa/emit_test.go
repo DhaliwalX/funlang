@@ -71,6 +71,20 @@ func IfElse(person Person) int {
 	}
 	return b;
 }
+
+func TestFor(person Person) int {
+	var a int = 0;
+	for a = 10; a > 0 {
+		person.age = person.age + a;
+		a = a - 1;
+	}
+	
+	return a;
+}
+
+//func TestIndex(arr []int, i *int) int {
+//	return *i;
+//}
 `)
 	a, err := p.Parse()
 	if err != nil {
@@ -83,5 +97,34 @@ func IfElse(person Person) int {
 	}
 
 	program := Emit(a, ctx)
-	t.Log(program)
+	fmt.Print(program)
+}
+
+func TestEmitCall(t *testing.T) {
+	ctx := &context.Context{}
+	p := parse.NewParserFromString(ctx, `type int int
+func TestCall() int {
+	return TestCall();
+}
+
+type Person struct { age int }
+
+func TestPerson(person Person) Person {
+	var age = TestCall();
+	var personAge = TestPerson();
+	return TestPerson();
+}
+`)
+	a, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+	}
+
+	errs := sema.ResolveProgram(a)
+	if len(errs) > 0 {
+		t.Error(errs)
+	}
+
+	program := Emit(a, ctx)
+	fmt.Print(program)
 }

@@ -81,8 +81,12 @@ func (f *Function) String() string {
 	}
 
 	builder.WriteString(") {\n")
-	for _, bb := range f.Blocks {
+	l = len(f.Blocks)
+	for i, bb := range f.Blocks {
 		builder.WriteString(bb.String())
+		if i+1 == l {
+			break
+		}
 		builder.WriteString("\n")
 	}
 

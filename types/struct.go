@@ -27,13 +27,20 @@ func (s *structType) Tag() TypeTag {
 func (s *structType) Name() string {
     builder := strings.Builder{}
     builder.WriteString("struct{")
+    l := len(s.elems)
+    i := 0;
     for name, t := range s.elems {
         builder.WriteString(name)
         builder.WriteString(":")
         builder.WriteString(t.Name())
-        builder.WriteString(";")
+
+        if i+1 != l {
+            builder.WriteString(";")
+        }
+        i++
     }
 
+    builder.WriteString("}")
     return builder.String()
 }
 
