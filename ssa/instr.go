@@ -2,9 +2,10 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/types"
 	"fmt"
 	"strings"
+
+	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
 type Instruction interface {
@@ -13,12 +14,11 @@ type Instruction interface {
 	Operand(i int) Value
 }
 
-type instrNode struct {}
+type instrNode struct{}
 
 func (i instrNode) Tag() ValueTag {
 	return INSTRUCTION
 }
-
 
 type instrWithOperands struct {
 	operands []Value
@@ -78,7 +78,7 @@ func (a *AllocInstr) Operands() []Value {
 	return []Value{}
 }
 
-func (a *AllocInstr) AddOperand(operand Value){
+func (a *AllocInstr) AddOperand(operand Value) {
 	return
 }
 
@@ -185,6 +185,7 @@ func (i *IndexInstr) String() string {
  *   +, -, *, /, %, ^, &, |, <, >, ==
  */
 type ArithOpcode int
+
 const (
 	PLUS ArithOpcode = iota
 	MINUS
@@ -314,7 +315,7 @@ func (c *CallInstr) String() string {
 	builder.WriteString(c.Operand(0).ShortString())
 	builder.WriteString("(")
 
-	l := len(c.operands)-1
+	l := len(c.operands) - 1
 	for i, arg := range c.Operands()[1:] {
 		builder.WriteString(arg.ShortString())
 		if l == i+1 {
@@ -393,6 +394,7 @@ func (p *PhiEdge) String() string {
 // x = phi [x1 <- $b1, x2 <- $b2, ... ]
 type PhiNode struct {
 	instrNode
+	instrWithOperands
 	valueWithName
 	valueWithUsers
 	Edges []*PhiEdge

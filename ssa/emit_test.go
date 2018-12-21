@@ -1,35 +1,35 @@
 package ssa
 
 import (
+	"fmt"
+	"testing"
+
 	"bitbucket.org/dhaliwalprince/funlang/context"
 	"bitbucket.org/dhaliwalprince/funlang/parse"
 	"bitbucket.org/dhaliwalprince/funlang/sema"
-	"bitbucket.org/dhaliwalprince/funlang/types"
-	"fmt"
-	"testing"
 )
 
 func newTestFunction() *Function {
-	return &Function{current:&BasicBlock{}}
+	return &Function{current: &BasicBlock{}}
 }
 
 func TestEmitDecl(t *testing.T) {
-	f := newTestFunction()
-	ctx := &context.Context{}
-	tr := transformer{
-		function: f,
-		factory: types.NewFactory(ctx),
-		types: make(map[string]types.Type),
-	}
+	// f := newTestFunction()
+	// ctx := &context.Context{}
+	// tr := transformer{
+	// 	function: f,
+	// 	factory: types.NewFactory(ctx),
+	// 	types: make(map[string]types.Type),
+	// }
 
-	p := parse.NewParserFromString(ctx, "var a int = 10 + 20;")
-	a, err := p.Parse()
-	if err != nil {
-		t.Error(err)
-	}
+	// p := parse.NewParserFromString(ctx, "var a int = 10 + 20;")
+	// a, err := p.Parse()
+	// if err != nil {
+	// 	t.Error(err)
+	// }
 
-	tr.Visit(a.Decls()[0])
-	fmt.Print(tr.function.current)
+	// tr.Visit(a.Decls()[0])
+	// fmt.Print(tr.function.current)
 }
 
 func TestEmit(t *testing.T) {
@@ -97,7 +97,7 @@ func TestFor(person Person) int {
 	}
 
 	program := Emit(a, ctx)
-	fmt.Print(program)
+	t.Log(program)
 }
 
 func TestEmitCall(t *testing.T) {

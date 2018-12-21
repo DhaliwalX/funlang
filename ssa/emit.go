@@ -1,12 +1,13 @@
 package ssa
 
 import (
+	"fmt"
+	"strconv"
+
 	"bitbucket.org/dhaliwalprince/funlang/ast"
 	"bitbucket.org/dhaliwalprince/funlang/context"
 	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"bitbucket.org/dhaliwalprince/funlang/types"
-	"fmt"
-	"strconv"
 )
 
 // transform AST to SSA
@@ -28,11 +29,11 @@ type transformer struct {
 }
 
 func (t *transformer) constantInt(val int) *ConstantInt {
-	return &ConstantInt{Value:val}
+	return &ConstantInt{Value: val}
 }
 
 func (t *transformer) constantString(val string) *ConstantString {
-	return &ConstantString{Value:val}
+	return &ConstantString{Value: val}
 }
 
 func isLVal(val Value) bool {
@@ -49,7 +50,15 @@ func isArray(val Value) bool {
 
 func (t *transformer) nextTemp() string {
 	t.counter++
-	return "t"+fmt.Sprint(t.counter)
+	return "t" + fmt.Sprint(t.counter)
+}
+
+func (t *transformer) operands(user Value, ops ...Value) instrWithOperands {
+	for _, op := range ops {
+		op.AddUser(user)
+	}
+
+	return instrWithOperands{operands: ops}
 }
 
 // emit load instruction for named value
@@ -58,9 +67,10 @@ func (t *transformer) load(val Value) *LoadInstr {
 		panic("load will only work for lvalues")
 	}
 
-	return &LoadInstr{users: []Value{},
-		instrWithOperands: instrWithOperands{operands:[]Value{val}},
-		valueWithName:valueWithName{name:t.nextTemp()}}
+	instr := &LoadInstr{users: []Value{},
+		valueWithName: valueWithName{name: t.nextTemp()}}
+	instr.instrWithOperands = t.operands(instr, val)
+	return instr
 }
 
 // *dst = src
@@ -69,13 +79,13 @@ func (t *transformer) store(dest Value, src Value) *StoreInstr {
 		panic("destination should be lvalue")
 	}
 
-	return &StoreInstr{
-		instrWithOperands:instrWithOperands{operands:[]Value{dest, src}},
-	}
+	instr := &StoreInstr{}
+	instr.instrWithOperands = t.operands(instr, dest, src)
+	return instr
 }
 
 func (trans *transformer) alloc(t types.Type) *AllocInstr {
-	return &AllocInstr{t:t, valueWithName:valueWithName{name:trans.nextTemp()}}
+	return &AllocInstr{t: t, valueWithName: valueWithName{name: trans.nextTemp()}}
 }
 
 func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
@@ -85,10 +95,13 @@ func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
 
 	meTy := t.factory.PointerType(val.Type().Elem().Field(member.Value))
 
-	return &MemberInstr{t: meTy,
+	instr := &MemberInstr{t: meTy,
 		instrWithOperands: instrWithOperands{operands: []Value{val, member}},
-		valueWithName:valueWithName{name:t.nextTemp()},
+		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
+
+	instr.instrWithOperands = t.operands(instr, val, member)
+	return instr
 }
 
 func (t *transformer) index(val Value, member Value) *IndexInstr {
@@ -96,62 +109,83 @@ func (t *transformer) index(val Value, member Value) *IndexInstr {
 		panic("destination should be a array with address")
 	}
 
-	return &IndexInstr{
-		instrWithOperands:instrWithOperands{operands:[]Value{val, member}},
-		valueWithName:valueWithName{name:t.nextTemp()},
+	instr := &IndexInstr{
+		instrWithOperands: instrWithOperands{operands: []Value{val, member}},
+		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
+
+	instr.instrWithOperands = t.operands(instr, val, member)
+	return instr
 }
 
 func (t *transformer) eval(op ArithOpcode, l, r int) int {
 	switch op {
 	case PLUS:
-		return l+r
+		return l + r
 	case MINUS:
-		return l-r
+		return l - r
 	case MUL:
-		return l*r
+		return l * r
 	case DIV:
-		return l/r
+		return l / r
 	case MOD:
-		return l%r
+		return l % r
 	case XOR:
-		return l^r
+		return l ^ r
 	case AND:
-		return l&r
+		return l & r
 	case OR:
-		return l|r
+		return l | r
 	case LT:
-		if l < r { return 1 } else { return 0 }
+		if l < r {
+			return 1
+		} else {
+			return 0
+		}
 	case GT:
-		if l > r { return 1 } else { return 0 }
+		if l > r {
+			return 1
+		} else {
+			return 0
+		}
 	case EQ:
-		if l == r { return 1 } else { return 0 }
+		if l == r {
+			return 1
+		} else {
+			return 0
+		}
 	}
 
 	panic("unknown arithematic operation")
 }
 
 func (t *transformer) arith(op ArithOpcode, l, r Value) Value {
-	if l.Tag() == CONSTANT_INT || r.Tag() ==  CONSTANT_STRING {
+	if l.Tag() == CONSTANT_INT || r.Tag() == CONSTANT_STRING {
 		return t.constantInt(t.eval(op, l.(*ConstantInt).Value, r.(*ConstantInt).Value))
 	}
 
-	return &ArithInstr{
+	instr := &ArithInstr{
 		opCode:            op,
 		instrWithOperands: instrWithOperands{operands: []Value{l, r}},
-		valueWithName: valueWithName{name:t.nextTemp()},
+		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
+	instr.instrWithOperands = t.operands(instr, l, r)
+	return instr
 }
 
 func (t *transformer) gotoif(condition Value, ontrue, onfalse *BasicBlock) *ConditionalGoto {
-	return &ConditionalGoto{
-		instrWithOperands:instrWithOperands{operands:[]Value{condition, ontrue, onfalse}},
+	instr := &ConditionalGoto{
+		instrWithOperands: instrWithOperands{operands: []Value{condition, ontrue, onfalse}},
 	}
+
+	condition.AddUser(instr)
+	// not tracking users for basicblocks
+	return instr
 }
 
 func (t *transformer) goTo(block *BasicBlock) *UnconditionalGoto {
 	return &UnconditionalGoto{
-		instrWithOperands:instrWithOperands{operands:[]Value{block}},
+		instrWithOperands: instrWithOperands{operands: []Value{block}},
 	}
 }
 
@@ -160,10 +194,16 @@ func (t *transformer) call(f *Function, args ...Value) *CallInstr {
 	for _, arg := range args {
 		operands = append(operands, arg)
 	}
-	return &CallInstr{
-		instrWithOperands:instrWithOperands{operands:operands},
-		valueWithName:valueWithName{name:t.nextTemp()},
+	instr := &CallInstr{
+		instrWithOperands: instrWithOperands{operands: operands},
+		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
+
+	for _, op := range instr.operands {
+		op.AddUser(instr)
+	}
+
+	return instr
 }
 
 func (t *transformer) ret(val Value) *RetInstr {
@@ -177,16 +217,23 @@ func (t *transformer) ret(val Value) *RetInstr {
 	}
 
 	if val.Type() != retType {
-		panic("return value type does not match with functions return type: "+t.function.name)
+		panic("return value type does not match with functions return type: " + t.function.name)
 	} else {
-		return &RetInstr{
-			instrWithOperands:instrWithOperands{operands:[]Value{val}},
+		instr := &RetInstr{
+			instrWithOperands: instrWithOperands{operands: []Value{val}},
 		}
+
+		val.AddUser(instr)
+		return instr
 	}
 }
 
 func (t *transformer) phi(edges []*PhiEdge) *PhiNode {
-	return &PhiNode{Edges:edges, valueWithName:valueWithName{name:t.nextTemp()}}
+	instr := &PhiNode{Edges: edges, valueWithName: valueWithName{name: t.nextTemp()}}
+	for _, edge := range edges {
+		edge.Value.AddUser(instr)
+	}
+	return instr
 }
 
 func (t *transformer) astError(node ast.Node, message string) {
@@ -316,7 +363,7 @@ func (t *transformer) emitMemberExpresion(m *ast.MemberExpression) Value {
 func (t *transformer) emitPrefixExpression(p *ast.PrefixExpression) Value {
 	old := t.address
 	var v Value
-	switch (p.Op()) {
+	switch p.Op() {
 	case lex.AND:
 		t.address = true
 		v = t.emitExpression(p.Expression())
@@ -365,7 +412,7 @@ func (t *transformer) mapOp(op lex.TokenType) ArithOpcode {
 		return EQ
 	}
 
-	panic("unknown binary operator: "+op.String())
+	panic("unknown binary operator: " + op.String())
 }
 
 func (t *transformer) emitBinaryExpression(e *ast.BinaryExpression) Value {
@@ -456,7 +503,7 @@ func (t *transformer) resolveType(typeExpr ast.Expression) types.Type {
 			if ty, ok := t.types[n.Name()]; ok {
 				return ty
 			} else if n.Object == nil || n.Object.Type == nil {
-				panic("unable to resolve type for "+n.Name()+" at "+n.Beg().String())
+				panic("unable to resolve type for " + n.Name() + " at " + n.Beg().String())
 			} else {
 				// try to resolve this type
 				tr := t.resolveType(n.Object.Type.(ast.Expression))
@@ -500,7 +547,7 @@ func (t *transformer) emitDeclaration(e ast.DeclNode) Value {
 		return nil
 	}
 
-	panic("unknown declaration"+fmt.Sprintf("%T", e))
+	panic("unknown declaration" + fmt.Sprintf("%T", e))
 }
 
 func (t *transformer) resolveFunctionSignature(f *ast.FunctionProtoType) types.Type {
@@ -521,7 +568,7 @@ func (t *transformer) emitFunction(f *ast.FunctionStatement) {
 	fun.locals = make(map[string]Value)
 	args := make(map[string]*Argument)
 
-	entryBlock := &BasicBlock{ Parent:fun, valueWithName:valueWithName{name:"entry."+fun.name}}
+	entryBlock := &BasicBlock{Parent: fun, valueWithName: valueWithName{name: "entry." + fun.name}}
 	fun.Blocks = []*BasicBlock{entryBlock}
 	fun.current = entryBlock
 	t.program.Globals[fun.name] = fun
@@ -530,7 +577,7 @@ func (t *transformer) emitFunction(f *ast.FunctionStatement) {
 	for _, ar := range f.Proto().Params() {
 		decl := ar.(*ast.Declaration)
 		argType := t.resolveType(decl.Type())
-		arg := &Argument{valueWithName: valueWithName{name:decl.Name()}, t:argType}
+		arg := &Argument{valueWithName: valueWithName{name: decl.Name()}, t: argType}
 		args[decl.Name()] = arg
 
 		// we need to copy the arguments to local variables, later optimisations can remove
@@ -559,12 +606,12 @@ func (t *transformer) emitReturn(x ast.Expression) {
 func (t *transformer) emitIfElseStatement(e *ast.IfElseStatement) {
 	cond := t.emitExpression(e.Condition())
 	label := t.nextTemp()
-	onTrue := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name:"if.true."+label}}
-	onFalse := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name:"if.false."+label}}
-	done := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{onTrue, onFalse},
-		valueWithName: valueWithName{name:"if.done."+label}}
+	onTrue := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name: "if.true." + label}}
+	onFalse := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name: "if.false." + label}}
+	done := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{onTrue, onFalse},
+		valueWithName: valueWithName{name: "if.done." + label}}
 
 	t.emit(t.gotoif(cond, onTrue, onFalse))
 	t.function.current = onTrue
@@ -587,12 +634,12 @@ func (t *transformer) emitForStatement(f *ast.ForStatement) {
 	t.emitExpression(f.Init())
 
 	label := t.nextTemp()
-	condBlock := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name:"for.cond."+label}}
-	bodyBlock := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{condBlock},
-		valueWithName: valueWithName{name:"for.body."+label}}
-	done := &BasicBlock{Parent:t.function, Preds:[]*BasicBlock{condBlock},
-		valueWithName: valueWithName{name:"for.done."+label}}
+	condBlock := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name: "for.cond." + label}}
+	bodyBlock := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{condBlock},
+		valueWithName: valueWithName{name: "for.body." + label}}
+	done := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{condBlock},
+		valueWithName: valueWithName{name: "for.done." + label}}
 
 	t.emit(t.goTo(condBlock))
 
@@ -644,9 +691,9 @@ func (t *transformer) Visit(node ast.Node) ast.Visitor {
 
 func Emit(program *ast.Program, ctx *context.Context) *Program {
 	p := &Program{Types: make(map[string]types.Type), Globals: make(map[string]Value)}
-	t := transformer{program:p,
+	t := transformer{program: p,
 		factory: types.NewFactory(ctx),
-		types: make(map[string]types.Type),
+		types:   make(map[string]types.Type),
 	}
 	for _, decl := range program.Decls() {
 		switch n := decl.(type) {

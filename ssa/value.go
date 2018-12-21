@@ -13,10 +13,15 @@ const (
 	FUNCTION
 )
 
-// value represents any constant, variable, method or instruction in ssa
+// Value represents any constant, variable, method or instruction in ssa
 type Value interface {
+	// uses represent the list of values which this value uses
 	Uses() []Value
+
+	// users represent the list of values which uses this value
 	Users() []Value
+
+	// append a user to users list
 	AddUser(user Value)
 	Tag() ValueTag
 	Type() types.Type
@@ -39,7 +44,7 @@ func (i valueWithUsers) AddUser(user Value) {
 	i.users = append(i.users, user)
 }
 
-type valueWithNoName struct {}
+type valueWithNoName struct{}
 
 func (v valueWithNoName) Name() string { return "" }
 
