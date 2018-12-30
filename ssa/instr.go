@@ -422,6 +422,6 @@ func (p *PhiNode) String() string {
 		builder.WriteString(", ")
 	}
 
-	builder.WriteString(")")
+	builder.WriteString("]")
 	return builder.String()
 }

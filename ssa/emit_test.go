@@ -128,3 +128,31 @@ func TestPerson(person Person) Person {
 	program := Emit(a, ctx)
 	fmt.Print(program)
 }
+
+func TestLogical(t *testing.T) {
+	ctx := &context.Context{}
+
+	p := parse.NewParserFromString(ctx, `type int int
+type bool int
+func TestLogicalOperation(a bool, b bool) bool {
+	return a && b;
+}
+
+func TestLogicalOperation2(a bool, b bool) bool {
+	return a || b;
+}
+`)
+	a, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+	}
+
+	errs := sema.ResolveProgram(a)
+
+	if len(errs) > 0 {
+		t.Error(errs)
+	}
+
+	program := Emit(a, ctx)
+	fmt.Print(program)
+}

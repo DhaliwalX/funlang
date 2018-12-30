@@ -415,12 +415,47 @@ func (t *transformer) mapOp(op lex.TokenType) ArithOpcode {
 	panic("unknown binary operator: " + op.String())
 }
 
+func (t *transformer) emitLogicalExpression(e *ast.BinaryExpression) Value {
+	old := t.address
+	t.address = false
+	l := t.emitExpression(e.Left())
+
+	x := t.function.current
+	next := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+		valueWithName: valueWithName{name: t.nextTemp() }}
+
+	final := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current, next},
+		valueWithName: valueWithName{name: t.nextTemp() }}
+	if e.Op() == lex.LAND {
+		t.emit(t.gotoif(l, next, final))
+	} else if e.Op() == lex.LOR {
+		t.emit(t.gotoif(l, final, next))
+	} else {
+		panic("illegal logical operator")
+	}
+	t.function.current = next
+	r := t.emitExpression(e.Right())
+	t.function.current = final
+
+	// emit phi instruction
+	edges := []*PhiEdge{ &PhiEdge{Block: x, Value: l}, &PhiEdge{Block: next, Value: r}}
+	v := t.emit(t.phi(edges))
+	t.function.Blocks = append(t.function.Blocks, next)
+	t.function.Blocks = append(t.function.Blocks, final)
+	t.address = old
+	return v
+}
+
 func (t *transformer) emitBinaryExpression(e *ast.BinaryExpression) Value {
 	old := t.address
 	t.address = false
 	l := t.emitExpression(e.Left())
 	r := t.emitExpression(e.Right())
 	t.address = old
+
+	if e.Op() == lex.LAND || e.Op() == lex.LOR {
+		return t.emitLogicalExpression(e)
+	}
 	v := t.arith(t.mapOp(e.Op()), l, r)
 	if v.Tag() != INSTRUCTION {
 		return v
