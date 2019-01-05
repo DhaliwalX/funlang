@@ -7,6 +7,7 @@ import (
 
 type dfsUtil struct {
     dfnum []int
+    parent []int
     current int
 }
 
@@ -23,12 +24,13 @@ func (u *dfsUtil) dfs(g graph, r int) {
     for _, n := range g[r].ns {
         if u.dfnum[n] == -1 {
             u.dfs(g, n)
+            u.parent[n] = r
         }
     }
 }
 
 func dfs(g graph) *dfsUtil {
-    d := dfsUtil{dfnum: make([]int, len(g)), current: 0}
+    d := dfsUtil{dfnum: make([]int, len(g)), parent: make([]int, len(g)), current: 0}
     d.init()
     d.dfs(g, 0)
     return &d
