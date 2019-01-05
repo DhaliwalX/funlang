@@ -156,3 +156,54 @@ func TestLogicalOperation2(a bool, b bool) bool {
 	program := Emit(a, ctx)
 	fmt.Print(program)
 }
+
+func TestEmit2(t *testing.T) {
+	ctx := &context.Context{}
+	p := parse.NewParserFromString(ctx, `
+	type int int
+
+	// find index of the minimum element in this array
+	func FindMinimum(a []int, s int, size int) int {
+		var i int = s;
+		var min = 0;
+		for i < size {
+			if a[min] > a[i] {
+				min = i;
+			}
+			i = i + 1;
+		}
+
+		return min;
+	}
+
+	// func Swap(a []int, x int, y int) {
+	// 	var t int = a[x];
+	// 	a[x] = a[y];
+	// 	a[y] = t;
+	// }
+
+	// func Sort(a []int, size int) {
+	// 	var i = 0;
+
+	// 	for i < size {
+	// 		var min = FindMinimum(a, i, size);
+	// 		swap(a, i, min);
+	// 		i = i + 1;
+	// 	}
+	// }
+	`)
+	a, err := p.Parse()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Print(a.String())
+
+	errs := sema.ResolveProgram(a)
+
+	if len(errs) > 0 {
+		t.Error(errs)
+	}
+
+	program := Emit(a, ctx)
+	fmt.Print(program)
+}

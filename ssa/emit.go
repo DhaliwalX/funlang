@@ -106,10 +106,11 @@ func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
 
 func (t *transformer) index(val Value, member Value) *IndexInstr {
 	if !isLVal(val) || (val.Type().Elem().Tag() != types.ARRAY_TYPE) {
-		panic("destination should be a array with address")
+		panic("destination should be an array with address")
 	}
 
 	instr := &IndexInstr{
+		t:                 t.factory.PointerType(val.Type().Elem()),
 		instrWithOperands: instrWithOperands{operands: []Value{val, member}},
 		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
@@ -356,6 +357,9 @@ func (t *transformer) emitMemberExpresion(m *ast.MemberExpression) Value {
 		if v.Type().Tag() != types.POINTER_TYPE {
 			return t.emit(v)
 		}
+		if _, ok := v.(Instruction); ok {
+			t.emit(v)
+		}
 		return t.emit(t.load(v))
 	}
 }
@@ -422,10 +426,12 @@ func (t *transformer) emitLogicalExpression(e *ast.BinaryExpression) Value {
 
 	x := t.function.current
 	next := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name: t.nextTemp() }}
+		valueWithName: valueWithName{name: t.nextTemp()}, index: len(t.function.Blocks)}
 
 	final := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current, next},
-		valueWithName: valueWithName{name: t.nextTemp() }}
+		valueWithName: valueWithName{name: t.nextTemp()}, index: len(t.function.Blocks) + 1}
+	t.function.Blocks = append(t.function.Blocks, next)
+	t.function.Blocks = append(t.function.Blocks, final)
 	if e.Op() == lex.LAND {
 		t.emit(t.gotoif(l, next, final))
 	} else if e.Op() == lex.LOR {
@@ -438,10 +444,8 @@ func (t *transformer) emitLogicalExpression(e *ast.BinaryExpression) Value {
 	t.function.current = final
 
 	// emit phi instruction
-	edges := []*PhiEdge{ &PhiEdge{Block: x, Value: l}, &PhiEdge{Block: next, Value: r}}
+	edges := []*PhiEdge{&PhiEdge{Block: x, Value: l}, &PhiEdge{Block: next, Value: r}}
 	v := t.emit(t.phi(edges))
-	t.function.Blocks = append(t.function.Blocks, next)
-	t.function.Blocks = append(t.function.Blocks, final)
 	t.address = old
 	return v
 }
@@ -606,6 +610,7 @@ func (t *transformer) emitFunction(f *ast.FunctionStatement) {
 	entryBlock := &BasicBlock{Parent: fun, valueWithName: valueWithName{name: "entry." + fun.name}}
 	fun.Blocks = []*BasicBlock{entryBlock}
 	fun.current = entryBlock
+	entryBlock.index = 0
 	t.program.Globals[fun.name] = fun
 	t.function = fun
 	t.counter = 0
@@ -642,39 +647,43 @@ func (t *transformer) emitIfElseStatement(e *ast.IfElseStatement) {
 	cond := t.emitExpression(e.Condition())
 	label := t.nextTemp()
 	onTrue := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name: "if.true." + label}}
+		valueWithName: valueWithName{name: "if.true." + label}, index: len(t.function.Blocks)}
+	t.function.Blocks = append(t.function.Blocks, onTrue)
 	onFalse := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name: "if.false." + label}}
+		valueWithName: valueWithName{name: "if.false." + label}, index: len(t.function.Blocks)}
+	t.function.Blocks = append(t.function.Blocks, onFalse)
 	done := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{onTrue, onFalse},
-		valueWithName: valueWithName{name: "if.done." + label}}
+		valueWithName: valueWithName{name: "if.done." + label}, index: len(t.function.Blocks)}
+	t.function.Blocks = append(t.function.Blocks, done)
 
 	t.emit(t.gotoif(cond, onTrue, onFalse))
 	t.function.current = onTrue
 	t.Visit(e.Body())
 	t.emit(t.goTo(done))
-	t.function.Blocks = append(t.function.Blocks, onTrue)
 
 	t.function.current = onFalse
 	if e.ElseNode() != nil {
 		t.Visit(e.ElseNode())
 	}
 	t.emit(t.goTo(done))
-	t.function.Blocks = append(t.function.Blocks, onFalse)
 
 	t.function.current = done
-	t.function.Blocks = append(t.function.Blocks, done)
 }
 
 func (t *transformer) emitForStatement(f *ast.ForStatement) {
-	t.emitExpression(f.Init())
-
+	if f.Init() != nil {
+		t.emitExpression(f.Init())
+	}
 	label := t.nextTemp()
 	condBlock := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
-		valueWithName: valueWithName{name: "for.cond." + label}}
+		valueWithName: valueWithName{name: "for.cond." + label}, index: len(t.function.Blocks)}
+	t.function.Blocks = append(t.function.Blocks, condBlock)
 	bodyBlock := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{condBlock},
-		valueWithName: valueWithName{name: "for.body." + label}}
+		valueWithName: valueWithName{name: "for.body." + label}, index: len(t.function.Blocks)}
+	t.function.Blocks = append(t.function.Blocks, bodyBlock)
 	done := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{condBlock},
-		valueWithName: valueWithName{name: "for.done." + label}}
+		valueWithName: valueWithName{name: "for.done." + label}, index: len(t.function.Blocks)}
+	t.function.Blocks = append(t.function.Blocks, done)
 
 	t.emit(t.goTo(condBlock))
 
@@ -682,15 +691,11 @@ func (t *transformer) emitForStatement(f *ast.ForStatement) {
 	cond := t.emitExpression(f.Condition())
 	t.emit(t.gotoif(cond, bodyBlock, done))
 
-	t.function.Blocks = append(t.function.Blocks, condBlock)
-
 	t.function.current = bodyBlock
 	t.Visit(f.Body())
 	t.emit(t.goTo(condBlock))
-	t.function.Blocks = append(t.function.Blocks, bodyBlock)
 
 	t.function.current = done
-	t.function.Blocks = append(t.function.Blocks, done)
 }
 
 func (t *transformer) Visit(node ast.Node) ast.Visitor {

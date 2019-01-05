@@ -65,12 +65,12 @@ func (parser *Parser) parseArgumentList() ast.Expression {
 	for {
 		parser.advance()
 		if parser.current.Type() == lex.RPAREN {
-		    parser.advance()
+			parser.advance()
 			break
 		}
 		x = append(x, parser.parseExpression())
 		if parser.current.Type() == lex.COMMA {
-		    parser.advance()
+			parser.advance()
 		} else {
 			parser.errs.append(newParseError(parser.current, "expected a ,"))
 			parser.advanceTil(lex.RPAREN)
@@ -151,32 +151,31 @@ func (parser *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (parser *Parser) parsePostfixExpression() ast.Expression {
-    return parser.parsePrefixExpression()
+	return parser.parsePrefixExpression()
 }
 
 func (parser *Parser) parseBinaryRHS(lowestPrec int, tok lex.Token, left ast.Expression) ast.Expression {
 	for {
-	    if tok.Type().Precedence() <= lowestPrec {
-	    		return left
+		if tok.Type().Precedence() <= lowestPrec {
+			return left
 		}
 
-	    	parser.advance()
-	    right := parser.parsePrefixExpression()
+		parser.advance()
+		right := parser.parsePrefixExpression()
 
-
-	    if parser.current.Type().Precedence() >= tok.Type().Precedence() {
-	    		right = parser.parseBinaryRHS(lowestPrec+1, parser.current, right)
+		if parser.current.Type().Precedence() >= tok.Type().Precedence() {
+			right = parser.parseBinaryRHS(lowestPrec+1, parser.current, right)
 		}
 
-	    left = parser.builder.NewBinaryExpression(tok.Begin(), tok.Type(), left, right)
-	    tok = parser.current
+		left = parser.builder.NewBinaryExpression(tok.Begin(), tok.Type(), left, right)
+		tok = parser.current
 	}
 }
 
 func (parser *Parser) parseBinaryExpression() ast.Expression {
 	left := parser.parsePostfixExpression()
 	tok := parser.current
-    return parser.parseBinaryRHS(lex.LowestPrec, tok, left)
+	return parser.parseBinaryRHS(lex.LowestPrec, tok, left)
 }
 
 func (parser *Parser) parseAssignExpression() ast.Expression {
@@ -184,7 +183,7 @@ func (parser *Parser) parseAssignExpression() ast.Expression {
 	if parser.current.Type() == lex.ASSIGN {
 		parser.advance()
 		right := parser.parseAssignExpression()
-		return parser.builder.NewAssignExpression(left.Beg(),left, right)
+		return parser.builder.NewAssignExpression(left.Beg(), left, right)
 	}
 	return left
 }

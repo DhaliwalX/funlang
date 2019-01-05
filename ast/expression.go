@@ -1,189 +1,186 @@
 package ast
 
 import (
-    "bitbucket.org/dhaliwalprince/funlang/lex"
-    "bitbucket.org/dhaliwalprince/funlang/types"
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
+
+	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
 type Expression interface {
-    Node
-    expr()
+	Node
+	expr()
 }
 
 type NilLiteral struct {
-    pos lex.Position // since nil has three characters only
+	pos lex.Position // since nil has three characters only
 }
 
 type NumericLiteral struct {
-    pos lex.Position
-    val string
-    isFloating bool
+	pos        lex.Position
+	val        string
+	isFloating bool
 }
 
 type StringLiteral struct {
-    pos lex.Position
-    val string
+	pos lex.Position
+	val string
 }
 
 type ArrayLiteral struct {
-    vals []Expression
+	vals []Expression
 }
 
 type StructProp struct {
-    pos  lex.Position
-    name string
-    val  Expression
+	pos  lex.Position
+	name string
+	val  Expression
 }
 
 type StructLiteral struct {
-    pos lex.Position
-    end lex.Position
-    props []StructProp
+	pos   lex.Position
+	end   lex.Position
+	props []StructProp
 }
-
 
 type ObjKind int
 
 const (
-    DONT_KNOW ObjKind = iota
-    TYPE
-    VAR
-    FUNC
+	DONT_KNOW ObjKind = iota
+	TYPE
+	VAR
+	FUNC
 )
 
-
 type Object struct {
-    Kind ObjKind
-    Name string
-    Type interface{}
-    Decl interface{}
-    Pos lex.Position
+	Kind ObjKind
+	Name string
+	Type interface{}
+	Decl interface{}
+	Pos  lex.Position
 }
 
-
 type Identifier struct {
-    pos lex.Position
-    name string
-    Object *Object
+	pos    lex.Position
+	name   string
+	Object *Object
 }
 
 type BooleanLiteral struct {
-    pos lex.Position
-    val bool
+	pos lex.Position
+	val bool
 }
 
 type ArgumentList struct {
-    pos lex.Position
-    exprs []Expression
+	pos   lex.Position
+	exprs []Expression
 }
 
 func (list *ArgumentList) Exprs() []Expression {
-    return list.exprs
+	return list.exprs
 }
 
 type MemberExpression struct {
-    pos    lex.Position
-    token  lex.TokenType
-    member Expression
-    x      Expression
+	pos    lex.Position
+	token  lex.TokenType
+	member Expression
+	x      Expression
 }
 
 type PrefixExpression struct {
-    pos lex.Position
-    op  lex.TokenType
-    x   Expression
+	pos lex.Position
+	op  lex.TokenType
+	x   Expression
 }
 
 func (p *PrefixExpression) Op() lex.TokenType {
-    return p.op
+	return p.op
 }
 
 func (p *PrefixExpression) Expression() Expression {
-    return p.x
+	return p.x
 }
 
 type PostfixExpression struct {
-    pos lex.Position
-    end lex.Position
-    op  lex.TokenType
-    x   Expression
+	pos lex.Position
+	end lex.Position
+	op  lex.TokenType
+	x   Expression
 }
 
 func (p *PostfixExpression) Op() lex.TokenType {
-    return p.op
+	return p.op
 }
 
 func (p *PostfixExpression) Expression() Expression {
-    return p.x
+	return p.x
 }
 
 type BinaryExpression struct {
-    pos   lex.Position
-    op    lex.TokenType
-    left  Expression
-    right Expression
+	pos   lex.Position
+	op    lex.TokenType
+	left  Expression
+	right Expression
 }
 
 func (b *BinaryExpression) Op() lex.TokenType {
-    return b.op
+	return b.op
 }
 
 type AssignExpression struct {
-    pos   lex.Position
-    left  Expression
-    right Expression
+	pos   lex.Position
+	left  Expression
+	right Expression
 }
 
 // type tree
 type ArrayType struct {
-    pos lex.Position
-    size Expression
-    t Expression
-    arrayType types.Type
+	pos       lex.Position
+	size      Expression
+	t         Expression
+	arrayType types.Type
 }
 
 func (a *ArrayType) Type() Expression {
-    return a.t
+	return a.t
 }
 
 func (a *ArrayType) Size() Expression {
-    return a.size
+	return a.size
 }
 
 type Field struct {
-    name Expression
-    t Expression
+	name Expression
+	t    Expression
 }
 
 func (f *Field) Name() string {
-    return f.name.(*Identifier).Name()
+	return f.name.(*Identifier).Name()
 }
 
 type StructType struct {
-    pos lex.Position
-    fields []*Field
+	pos    lex.Position
+	fields []*Field
 }
 
 func (s *StructType) Fields() []*Field {
-    return s.fields
+	return s.fields
 }
 
 type FuncType struct {
-    pos lex.Position
-    params []Expression
-    ret Expression
+	pos    lex.Position
+	params []Expression
+	ret    Expression
 }
 
 func (f *FuncType) Params() []Expression {
-    return f.params
+	return f.params
 }
 
 func (f *FuncType) Return() Expression {
-    return f.ret
+	return f.ret
 }
-
 
 func (*NilLiteral) expr() {}
 
@@ -195,7 +192,7 @@ func (*BooleanLiteral) expr() {}
 
 func (*Identifier) expr() {}
 
-func (*ArgumentList) expr() {}
+func (*ArgumentList) expr()              {}
 func (a *ArgumentList) Type() types.Type { return nil }
 
 func (*MemberExpression) expr() {}
@@ -210,7 +207,7 @@ func (*AssignExpression) expr() {}
 
 func (*ArrayType) expr() {}
 
-func (*Field) expr() {}
+func (*Field) expr()              {}
 func (f *Field) Type() Expression { return f.t }
 
 func (*StructType) expr() {}
@@ -219,41 +216,41 @@ func (*FuncType) expr() {}
 
 func (n *NilLiteral) Beg() lex.Position { return n.pos }
 func (n *NilLiteral) End() lex.Position {
-    return lex.Position{Col:n.pos.Col+3,Row:n.pos.Row}
+	return lex.Position{Col: n.pos.Col + 3, Row: n.pos.Row}
 }
 
-func (n *NumericLiteral) Beg() lex.Position{ return n.pos }
+func (n *NumericLiteral) Beg() lex.Position { return n.pos }
 func (n *NumericLiteral) End() lex.Position {
-    return lex.Position{Col: n.pos.Col+len(n.val), Row: n.pos.Row}
+	return lex.Position{Col: n.pos.Col + len(n.val), Row: n.pos.Row}
 }
 
 func (s *StringLiteral) Beg() lex.Position { return s.pos }
 func (s *StringLiteral) End() lex.Position {
-    return lex.Position{Col:s.pos.Col+len(s.val), Row:s.pos.Row}
+	return lex.Position{Col: s.pos.Col + len(s.val), Row: s.pos.Row}
 }
 
 func (b *BooleanLiteral) Beg() lex.Position { return b.pos }
 func (b *BooleanLiteral) End() lex.Position {
-    if b.val {
-        return lex.Position{Col:b.pos.Col+4, Row:b.pos.Row}
-    } else {
-        return lex.Position{Col:b.pos.Col+5, Row:b.pos.Row}
-    }
+	if b.val {
+		return lex.Position{Col: b.pos.Col + 4, Row: b.pos.Row}
+	} else {
+		return lex.Position{Col: b.pos.Col + 5, Row: b.pos.Row}
+	}
 }
 
 func (i *Identifier) Beg() lex.Position { return i.pos }
 func (i *Identifier) End() lex.Position {
-    return lex.Position{Col: i.pos.Col+len(i.name), Row: i.pos.Row}
+	return lex.Position{Col: i.pos.Col + len(i.name), Row: i.pos.Row}
 }
 
 func (a *ArgumentList) Beg() lex.Position { return a.pos }
 func (a *ArgumentList) End() lex.Position {
-    if len(a.exprs) > 0 {
-        last := a.exprs[len(a.exprs)-1]
-        return last.End()
-    } else {
-        return a.Beg()
-    }
+	if len(a.exprs) > 0 {
+		last := a.exprs[len(a.exprs)-1]
+		return last.End()
+	} else {
+		return a.Beg()
+	}
 }
 
 func (m *MemberExpression) Beg() lex.Position { return m.pos }
@@ -264,7 +261,7 @@ func (p *PrefixExpression) End() lex.Position { return p.x.End() }
 
 func (p *PostfixExpression) Beg() lex.Position { return p.pos }
 func (p *PostfixExpression) End() lex.Position {
-    return p.end
+	return p.end
 }
 
 func (b *BinaryExpression) Beg() lex.Position { return b.left.Beg() }
@@ -281,114 +278,113 @@ func (f *Field) End() lex.Position { return f.t.End() }
 
 func (s *StructType) Beg() lex.Position { return s.pos }
 func (s *StructType) End() lex.Position {
-    if len(s.fields) >0 {
-        last := s.fields[len(s.fields)-1]
-        return last.End()
-    } else {
-        return s.pos
-    }
+	if len(s.fields) > 0 {
+		last := s.fields[len(s.fields)-1]
+		return last.End()
+	} else {
+		return s.pos
+	}
 }
 
 func (f *FuncType) Beg() lex.Position { return f.pos }
 func (f *FuncType) End() lex.Position { return f.ret.End() }
 
 func (*NilLiteral) String() string {
-    return "nil"
+	return "nil"
 }
 
 func (n *NumericLiteral) String() string {
-    return n.val
+	return n.val
 }
 
 func (n *StringLiteral) String() string {
-    return n.val
+	return n.val
 }
 
 func (b *BooleanLiteral) String() string {
-    return fmt.Sprint(b.val)
+	return fmt.Sprint(b.val)
 }
 
 func (i *Identifier) String() string {
-    return i.name
+	return i.name
 }
 
 func (a *ArgumentList) String() string {
-    builder := strings.Builder{}
-    builder.WriteString("(")
-    for _, arg := range a.exprs {
-        builder.WriteString(fmt.Sprint(arg))
-        builder.WriteString(", ")
-    }
-    builder.WriteString(")")
-    return builder.String()
+	builder := strings.Builder{}
+	builder.WriteString("(")
+	for _, arg := range a.exprs {
+		builder.WriteString(fmt.Sprint(arg))
+		builder.WriteString(", ")
+	}
+	builder.WriteString(")")
+	return builder.String()
 }
 
 func (m *MemberExpression) String() string {
-    builder := strings.Builder{}
-    builder.WriteString(fmt.Sprintf("('%s' %s %s)", m.token, m.member, m.x))
-    return builder.String()
+	builder := strings.Builder{}
+	builder.WriteString(fmt.Sprintf("('%s' %s %s)", m.token, m.x, m.member))
+	return builder.String()
 }
 
 func (p *PrefixExpression) String() string {
-    return fmt.Sprintf("%s (%s)", p.op, p.x)
+	return fmt.Sprintf("%s (%s)", p.op, p.x)
 }
 
 func (p *BinaryExpression) String() string {
-    return fmt.Sprintf("(%s %s %s)", p.left, p.op, p.right)
+	return fmt.Sprintf("(%s %s %s)", p.left, p.op, p.right)
 }
 
 func (p *AssignExpression) String() string {
-    return fmt.Sprintf("%s = %s", p.left, p.right)
+	return fmt.Sprintf("%s = %s", p.left, p.right)
 }
 
 func (a *ArrayType) String() string {
-    return fmt.Sprintf("[]%s", a.t)
+	return fmt.Sprintf("[]%s", a.t)
 }
 
 func (s *StructType) String() string {
-    builder := strings.Builder{}
-    builder.WriteString("struct{ ")
-    for _, field := range s.fields {
-        builder.WriteString(fmt.Sprintf("%s %s, ", field.name, field.t))
-    }
+	builder := strings.Builder{}
+	builder.WriteString("struct{ ")
+	for _, field := range s.fields {
+		builder.WriteString(fmt.Sprintf("%s %s, ", field.name, field.t))
+	}
 
-    builder.WriteString("}")
-    return builder.String()
+	builder.WriteString("}")
+	return builder.String()
 }
 
 func (a *ArgumentList) List() []Expression {
-    return a.exprs
+	return a.exprs
 }
 
 func (m *MemberExpression) Member() Expression {
-    return m.x
+	return m.member
 }
 
 func (m *MemberExpression) Expr() Expression {
-    return m.member
+	return m.x
 }
 
 func (m *MemberExpression) AccessKind() lex.TokenType {
-    return m.token
+	return m.token
 }
 
 func (i *Identifier) Name() string {
-    return i.name
+	return i.name
 }
 
 func (b *BinaryExpression) Left() Expression {
-    return b.left
+	return b.left
 }
 
 func (b *BinaryExpression) Right() Expression {
-    return b.right
+	return b.right
 }
 
-
 func (a *AssignExpression) Left() Expression {
-    return a.left
+	return a.left
 }
 
 func (a *AssignExpression) Right() Expression {
-    return a.right
+	return a.right
 }

@@ -42,7 +42,8 @@ func (parser *Parser) parseArrayType() ast.Expression {
 	parser.advance()
 	if parser.current.Type() == lex.RBRACK {
 		parser.advance()
-		return parser.parseType()
+		t := parser.parseType()
+		return parser.builder.NewArrayType(pos, nil, t)
 	}
 
 	expr := parser.parseExpression()
