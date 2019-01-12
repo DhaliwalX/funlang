@@ -2,7 +2,10 @@
 //  ref: A fast algorithm for finding dominators in a graph by Tarjan et. al.
 package res
 
-import "fmt"
+import (
+    "bitbucket.org/dhaliwalprince/funlang/ssa"
+    "fmt"
+)
 
 type domUtil struct {
     dom []int
@@ -30,7 +33,9 @@ func (d *domUtil) link(u, w int) {
 }
 
 func (d *domUtil) String() string {
-    return fmt.Sprintf("SDOM: %v; DOM: %v; PARENT: %v; V: %v", d.sdom, d.dom, d.parent, d.vertex)
+    return fmt.Sprintf(
+        "SDOM: %v; DOM: %v; PARENT: %v; V: %v",
+        d.sdom, d.dom, d.parent, d.vertex)
 }
 
 // main algorithm for computing dominators
@@ -89,4 +94,22 @@ func (d *domUtil) computeDominators(g graph) {
 
     // dom(root) == 0
     d.dom[0] = 0
+}
+
+func createGraph(blocks []*ssa.BasicBlock) graph {
+    g := makeGraph(len(blocks))
+    for _, block := range blocks {
+        n := block.Index
+        for _, succ := range block.Succs {
+            g.addEdge(n, succ.Index)
+        }
+    }
+    return g
+}
+
+func ComputeDominators(blocks []*ssa.BasicBlock) *domUtil {
+    g := createGraph(blocks)
+    d := &domUtil{}
+    d.computeDominators(g)
+    return d
 }
