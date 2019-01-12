@@ -25,7 +25,9 @@ func (t *functionType) Name() string {
         builder.WriteString(argType.Name())
     }
 
-    builder.WriteString(fmt.Sprintf("): %s", t.returnType.Name()))
+    if t.returnType != nil {
+        builder.WriteString(fmt.Sprintf("): %s", t.returnType.Name()))
+    }
     return builder.String()
 }
 
