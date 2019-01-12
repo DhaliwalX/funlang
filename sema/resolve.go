@@ -181,6 +181,9 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 		o := &ast.Object{Kind:ast.VAR, Name: n.Proto().Name(), Decl:n, Type:n.Proto()}
 		r.resolve(n.Proto().Name(), o)
 		resolve2(r, n.Proto().Return())
+		if n.Body() == nil {
+			break
+		}
 		r.openScope()
 		for _, param := range n.Proto().Params() {
 			resolve2(r, param)
