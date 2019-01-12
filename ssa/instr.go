@@ -24,19 +24,19 @@ type instrWithOperands struct {
 	operands []Value
 }
 
-func (i instrWithOperands) AddOperand(operand Value) {
+func (i *instrWithOperands) AddOperand(operand Value) {
 	i.operands = append(i.operands, operand)
 }
 
-func (in instrWithOperands) Operand(i int) Value {
+func (in *instrWithOperands) Operand(i int) Value {
 	return in.operands[i]
 }
 
-func (i instrWithOperands) Operands() []Value {
+func (i *instrWithOperands) Operands() []Value {
 	return i.operands
 }
 
-func (i instrWithOperands) Uses() []Value {
+func (i *instrWithOperands) Uses() []Value {
 	return i.operands
 }
 
@@ -253,6 +253,10 @@ func (a *ArithInstr) Type() types.Type {
 
 func (a *ArithInstr) ShortString() string {
 	return fmt.Sprintf("%s", a.Name())
+}
+
+func (a *ArithInstr) Op() ArithOpcode {
+	return a.opCode
 }
 
 func (a *ArithInstr) String() string {

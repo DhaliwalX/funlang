@@ -43,6 +43,7 @@ type Function struct {
 	// these fields are required while creating ssa
 	current *BasicBlock
 	locals map[string]Value
+	Extern bool
 }
 
 func (f *Function) Uses() []Value {

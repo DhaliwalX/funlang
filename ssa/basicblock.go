@@ -10,18 +10,18 @@ import (
 type BasicBlock struct {
 	valueWithUsers
 	valueWithName
-	instrs []Value
+	instrs []Instruction
 
 	Preds, Succs []*BasicBlock
 	Parent       *Function
-	index        int
+	Index        int
 }
 
-func (b *BasicBlock) Instructions() []Value {
+func (b *BasicBlock) Instructions() []Instruction {
 	return b.instrs
 }
 
-func (b *BasicBlock) appendInstr(val Value) {
+func (b *BasicBlock) appendInstr(val Instruction) {
 	b.instrs = append(b.instrs, val)
 }
 
@@ -40,7 +40,7 @@ func (b *BasicBlock) Type() types.Type {
 func (b *BasicBlock) String() string {
 	builder := strings.Builder{}
 	builder.WriteString(b.Name())
-	builder.WriteString(":\t\t\t" + fmt.Sprint(b.index) + "\n")
+	builder.WriteString(":\t\t\t" + fmt.Sprintf("%d <u:%d>", b.Index, len(b.Users())) + "\n")
 	for _, instr := range b.instrs {
 		builder.WriteString("\t" + instr.String())
 		builder.WriteString("\n")

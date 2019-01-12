@@ -36,22 +36,22 @@ type valueWithUsers struct {
 	users []Value
 }
 
-func (i valueWithUsers) Users() []Value {
+func (i *valueWithUsers) Users() []Value {
 	return i.users
 }
 
-func (i valueWithUsers) AddUser(user Value) {
+func (i *valueWithUsers) AddUser(user Value) {
 	i.users = append(i.users, user)
 }
 
 type valueWithNoName struct{}
 
-func (v valueWithNoName) Name() string { return "" }
+func (v *valueWithNoName) Name() string { return "" }
 
 type valueWithName struct {
 	name string
 }
 
-func (i valueWithName) Name() string {
+func (i *valueWithName) Name() string {
 	return i.name
 }

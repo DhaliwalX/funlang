@@ -6,9 +6,12 @@ import (
 )
 
 type ConstantInt struct {
-	valueWithNoName
 	valueWithUsers
 	Value int
+}
+
+func (c *ConstantInt) Name() string {
+	return fmt.Sprint(c.Value)
 }
 
 func (c *ConstantInt) Uses() []Value {
@@ -32,9 +35,12 @@ func (c *ConstantInt) Type() types.Type {
 }
 
 type ConstantString struct {
-	valueWithNoName
 	valueWithUsers
 	Value string
+}
+
+func (c *ConstantString) Name() string {
+	return "\"" + c.Value + "\""
 }
 
 func (c *ConstantString) String() string {
