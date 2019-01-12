@@ -1,25 +1,49 @@
 package main
 
 import (
+	"bitbucket.org/dhaliwalprince/funlang/codegen"
 	"bitbucket.org/dhaliwalprince/funlang/context"
 	"bitbucket.org/dhaliwalprince/funlang/parse"
+	"bitbucket.org/dhaliwalprince/funlang/sema"
+	"bitbucket.org/dhaliwalprince/funlang/ssa"
 	"fmt"
+	"os"
 )
 
 func main() {
 	ctx := &context.Context{}
-	parser := parse.NewParserFromString(ctx, `
-var a int = 10;
-var a = 10;
-var c = "string";
-type Struct struct {
-	hello int
-}`)
-	ast, err := parser.Parse()
-	if err != nil {
-		fmt.Print(err)
+	if len(os.Args) < 2 {
+		fmt.Println("usage: fun filename")
 		return
 	}
 
-	fmt.Print(ast)
+	filename := os.Args[1]
+	p := parse.NewParserFromFile(ctx, os.Args[1])
+	a, err := p.Parse()
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	fmt.Println("== resolving variables")
+	errs := sema.ResolveProgram(a)
+	if len(errs) > 0 {
+		fmt.Print(errs)
+	}
+	fmt.Println(a)
+
+	program := ssa.Emit(a, ctx)
+	fmt.Print(program)
+
+	backend := &codegen.GoBackend{}
+	backend.Run(program)
+	o, err := os.OpenFile(fmt.Sprintf("%s.c", filename), os.O_CREATE|os.O_WRONLY, 0555)
+	if err != nil {
+		panic(err)
+	}
+	defer o.Close()
+	_, err = o.Write([]byte(backend.String()))
+
+	if err != nil {
+		panic(err)
+	}
 }
