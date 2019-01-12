@@ -49,31 +49,9 @@ func (parser *Parser) Parse() (*ast.Program, error) {
     return ast.NewProgram(parser.ctx, parser.lex.Source(), decls), nil
 }
 
-/*
-    M(NullLiteral)          \
-    M(ThisHolder)           \
-    M(IntegralLiteral)      \
-    M(StringLiteral)        \
-    M(ArrayLiteral)         \
-    M(ObjectLiteral)        \
-    M(Identifier)           \
-    M(BooleanLiteral)       \
-    M(ArgumentList)         \
-    M(CallExpression)       \
-    M(MemberExpression)     \
-    M(PrefixExpression)     \
-    M(PostfixExpression)    \
-    M(BinaryExpression)     \
-    M(AssignExpression)     \
-    M(Declaration)          \
-    M(DeclarationList)      \
-    M(IfStatement)          \
-    M(IfElseStatement)      \
-    M(ForStatement)         \
-    M(WhileStatement)       \
-    M(DoWhileStatement)     \
-    M(BlockStatement)       \
-    M(FunctionPrototype)    \
-    M(FunctionStatement)    \
-    M(ReturnStatement)
-*/
+func NewParserFromFile(ctx *context.Context, name string) *Parser {
+    src := lex.NewFileSource(name)
+    lexer := lex.NewLexer(src)
+    parser := Parser{lex:lexer, ctx: ctx, builder: ast.NewBuilder(ctx)}
+    return &parser
+}

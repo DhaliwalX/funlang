@@ -70,16 +70,14 @@ func (parser *Parser) parseArgumentList() ast.Expression {
 		}
 		x = append(x, parser.parseExpression())
 		if parser.current.Type() == lex.COMMA {
-			parser.advance()
-		} else {
+			continue
+		} else if parser.current.Type() != lex.RPAREN {
 			parser.errs.append(newParseError(parser.current, "expected a ,"))
 			parser.advanceTil(lex.RPAREN)
 			return nil
 		}
 		if parser.current.Type() == lex.RPAREN {
-			parser.errs.append(newParseError(parser.current, "unexpected )"))
 			parser.advance()
-			x = append(x, nil)
 			break
 		}
 	}

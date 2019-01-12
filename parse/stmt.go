@@ -77,13 +77,20 @@ func (parser *Parser) parseFunction() ast.Statement {
 
 	ret := parser.parseType()
 	proto := parser.builder.NewFunctionProtoType(pos, name, params, ret)
-	body := parser.parseBlockStatement()
-	if body == nil {
-		parser.errs.append(newParseError(parser.current, "expected function body"))
-		return nil
+
+	var body *ast.BlockStatement
+	if parser.current.Type() != lex.SEMICOLON {
+		b := parser.parseBlockStatement()
+		if b == nil {
+			parser.errs.append(newParseError(parser.current,"expected a function body"))
+			return nil
+		}
+		body = b.(*ast.BlockStatement)
+	} else {
+		parser.advance()
 	}
 
-	fun := parser.builder.NewFunctionStatement(proto, body.(*ast.BlockStatement))
+	fun := parser.builder.NewFunctionStatement(proto, body)
 	return fun
 }
 
