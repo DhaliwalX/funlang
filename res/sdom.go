@@ -66,7 +66,7 @@ func sort(a []int, b []int) {
     qsort(a, c, 0, len(b)-1)
 }
 
-func (s *sdomUtil) init(g graph, d *dfsUtil) {
+func (s *sdomUtil) init(g Graph, d *dfsUtil) {
     s.preOrdered = make([]int, len(d.dfnum))
     s.sdom = make([]int, len(d.dfnum))
     for i := range g  {
@@ -79,17 +79,17 @@ func (s *sdomUtil) init(g graph, d *dfsUtil) {
     sort(s.preOrdered, d.dfnum)
 }
 
-func (s *sdomUtil) evalNode(g graph, d *dfsUtil, r int) int {
+func (s *sdomUtil) evalNode(g Graph, d *dfsUtil, r int) int {
     min := math.MaxInt32
     if r == 0 {
         return 0
     }
 
-    if len(g[r].pred) == 1 {
-        s.sdom[r] = g[r].pred[0]
+    if len(g[r].Preds) == 1 {
+        s.sdom[r] = g[r].Preds[0]
         return s.sdom[r]
     }
-    for _, p := range g[r].pred {
+    for _, p := range g[r].Preds {
         if d.dfnum[p] > d.dfnum[r] {
             if s.sdom[p] == -1 {
                 s.sdom[p] = s.evalNode(g, d, p)
@@ -112,7 +112,7 @@ func (s *sdomUtil) evalNode(g graph, d *dfsUtil, r int) int {
     return min
 }
 
-func (s *sdomUtil) computeSdom(g graph, d *dfsUtil) {
+func (s *sdomUtil) computeSdom(g Graph, d *dfsUtil) {
     for i := range s.preOrdered {
         n := s.preOrdered[i]
 
@@ -122,7 +122,7 @@ func (s *sdomUtil) computeSdom(g graph, d *dfsUtil) {
     }
 }
 
-func sdom(g graph, d *dfsUtil) []int {
+func sdom(g Graph, d *dfsUtil) []int {
     s := sdomUtil{}
     s.init(g, d)
     s.computeSdom(g, d)

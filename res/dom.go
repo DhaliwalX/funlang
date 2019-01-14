@@ -1,5 +1,5 @@
-// this file implements algorithm for building dominator tree for a graph
-//  ref: A fast algorithm for finding dominators in a graph by Tarjan et. al.
+// this file implements algorithm for building dominator tree for a Graph
+//  ref: A fast algorithm for finding dominators in a Graph by Tarjan et. al.
 package res
 
 import (
@@ -7,8 +7,8 @@ import (
     "fmt"
 )
 
-type domUtil struct {
-    dom []int
+type DomInfo struct {
+    Dominator []int
 
     // holds semidominator information and before that will store dfs numbers
     sdom []int
@@ -24,22 +24,32 @@ type domUtil struct {
     buckets [][]int
 }
 
-func (d *domUtil) eval(v int) int {
+func (d *DomInfo) eval(v int) int {
     return d.d.eval(v, d.sdom)
 }
 
-func (d *domUtil) link(u, w int) {
+func (d *DomInfo) link(u, w int) {
     d.d.link(u, w)
 }
 
-func (d *domUtil) String() string {
+func (d *DomInfo) String() string {
     return fmt.Sprintf(
         "SDOM: %v; DOM: %v; PARENT: %v; V: %v",
-        d.sdom, d.dom, d.parent, d.vertex)
+        d.sdom, d.Dominator, d.parent, d.vertex)
+}
+
+// this will fill Graph nodes with Dominees information
+func (d *DomInfo) fillInfo(g Graph) {
+    for i, d := range d.Dominator {
+        if i == 0 && d == 0 {
+            continue
+        }
+        g[d].Dominees = append(g[d].Dominees, i)
+    }
 }
 
 // main algorithm for computing dominators
-func (d *domUtil) computeDominators(g graph) {
+func (d *DomInfo) computeDominators(g Graph) {
     // step 1: carry out dfs and initialize structure properly
     df := dfs(g)
     d.sdom = df.dfnum
@@ -50,7 +60,7 @@ func (d *domUtil) computeDominators(g graph) {
         d.vertex[v] = i
     }
     d.d = makeDsu(total)
-    d.dom = make([]int, total)
+    d.Dominator = make([]int, total)
     d.buckets = make([][]int, total)
 
 
@@ -58,7 +68,7 @@ func (d *domUtil) computeDominators(g graph) {
         v := d.vertex[i]
 
         // step 2: compute semi-dominators
-        for _, pred := range g[v].pred {
+        for _, pred := range g[v].Preds {
             u := d.eval(pred)
             if d.sdom[u] < d.sdom[v] {
                 d.sdom[v] = d.sdom[u]
@@ -72,31 +82,33 @@ func (d *domUtil) computeDominators(g graph) {
         // LINK(parent(w), w)
         d.link(d.parent[v], v)
 
-        // step 3: dom
+        // step 3: Dominator
         for _, u := range d.buckets[d.parent[v]] {
             d.buckets[d.parent[v]] = d.buckets[d.parent[v]][1:]
             w := d.eval(u)
             if d.sdom[w] < d.sdom[u] {
-                d.dom[u] = w
+                d.Dominator[u] = w
             } else {
-                d.dom[u] = d.parent[v]
+                d.Dominator[u] = d.parent[v]
             }
         }
     }
 
-    // step 4: fill dom implicitly
+    // step 4: fill Dominator implicitly
     for i := 1; i < total; i++ {
         w := d.vertex[i]
-        if d.dom[w] != d.vertex[d.sdom[w]] {
-            d.dom[w] = d.dom[d.dom[w]]
+        if d.Dominator[w] != d.vertex[d.sdom[w]] {
+            d.Dominator[w] = d.Dominator[d.Dominator[w]]
         }
     }
 
-    // dom(root) == 0
-    d.dom[0] = 0
+    // Dominator(root) == 0
+    d.Dominator[0] = 0
+
+    d.fillInfo(g)
 }
 
-func createGraph(blocks []*ssa.BasicBlock) graph {
+func CreateGraph(blocks []*ssa.BasicBlock) Graph {
     g := makeGraph(len(blocks))
     for _, block := range blocks {
         n := block.Index
@@ -107,9 +119,8 @@ func createGraph(blocks []*ssa.BasicBlock) graph {
     return g
 }
 
-func ComputeDominators(blocks []*ssa.BasicBlock) *domUtil {
-    g := createGraph(blocks)
-    d := &domUtil{}
+func ComputeDominators(g Graph) *DomInfo {
+    d := &DomInfo{}
     d.computeDominators(g)
     return d
 }

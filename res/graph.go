@@ -1,26 +1,27 @@
 package res
 
 
-type node struct {
-    ns []int
-    pred []int
+type Node struct {
+    Succs    []int
+    Preds    []int
+    Dominees []int
 }
 
-func (n *node) addNeighbour(i int) {
-    n.ns = append(n.ns, i)
+func (n *Node) addNeighbour(i int) {
+    n.Succs = append(n.Succs, i)
 }
 
-func (n *node) addPred(p int) {
-    n.pred = append(n.pred, p)
+func (n *Node) addPred(p int) {
+    n.Preds = append(n.Preds, p)
 }
 
-type graph []node
+type Graph []Node
 
-func (g graph) addEdge(s, e int) {
+func (g Graph) addEdge(s, e int) {
     g[s].addNeighbour(e)
     g[e].addPred(s)
 }
 
-func makeGraph(n int) graph {
-    return make([]node, n)
+func makeGraph(n int) Graph {
+    return make([]Node, n)
 }

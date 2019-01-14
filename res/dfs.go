@@ -17,11 +17,11 @@ func (u *dfsUtil) init() {
     }
 }
 
-func (u *dfsUtil) dfs(g graph, r int) {
+func (u *dfsUtil) dfs(g Graph, r int) {
     u.dfnum[r] = u.current
 
     u.current++
-    for _, n := range g[r].ns {
+    for _, n := range g[r].Succs {
         if u.dfnum[n] == -1 {
             u.dfs(g, n)
             u.parent[n] = r
@@ -29,7 +29,7 @@ func (u *dfsUtil) dfs(g graph, r int) {
     }
 }
 
-func dfs(g graph) *dfsUtil {
+func dfs(g Graph) *dfsUtil {
     d := dfsUtil{dfnum: make([]int, len(g)), parent: make([]int, len(g)), current: 0}
     d.init()
     d.dfs(g, 0)

@@ -1,16 +1,21 @@
-package passes
+package ssa
 
-import "bitbucket.org/dhaliwalprince/funlang/ssa"
+type Pass interface {
+	IsAnalysisPass() bool
+}
 
 type FunctionPass interface {
+	Pass
 	// returns true if something is changed, otherwise false
-	Run(f *ssa.Function) bool
+	Run(f *Function) bool
 }
 
 type BBPass interface {
-	Run(b *ssa.BasicBlock) bool
+	Pass
+	Run(b *BasicBlock) bool
 }
 
 type ProgramPass interface {
-	Run(p *ssa.Program) bool
+	Pass
+	Run(p *Program) bool
 }
