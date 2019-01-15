@@ -65,6 +65,15 @@ func sample5() Graph {
     return g
 }
 
+func sample6() Graph {
+    g := makeGraph(4)
+    g.addEdge(0, 1)
+    g.addEdge(0, 2)
+    g.addEdge(1, 3)
+    g.addEdge(2, 3)
+    return g
+}
+
 func TestDfs(t *testing.T) {
     g := sample3()
     d := dfs(g)

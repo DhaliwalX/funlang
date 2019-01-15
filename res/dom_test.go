@@ -38,3 +38,11 @@ func TestDOM5(t *testing.T) {
     d.computeDominators(g)
     t.Log(d.String())
 }
+
+func TestDOM6(t *testing.T) {
+    g := sample6()
+    t.Log(g.Dot())
+    d := DomInfo{}
+    d.computeDominators(g)
+    t.Log(d.String())
+}

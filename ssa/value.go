@@ -1,6 +1,9 @@
 package ssa
 
-import "bitbucket.org/dhaliwalprince/funlang/types"
+import (
+	"bitbucket.org/dhaliwalprince/funlang/ds"
+	"bitbucket.org/dhaliwalprince/funlang/types"
+)
 
 type ValueTag int
 
@@ -20,6 +23,7 @@ type Value interface {
 
 	// users represent the list of values which uses this value
 	Users() []Value
+	RemoveFromUsers(v Value)
 
 	// append a user to users list
 	AddUser(user Value)
@@ -42,6 +46,15 @@ func (i *valueWithUsers) Users() []Value {
 
 func (i *valueWithUsers) AddUser(user Value) {
 	i.users = append(i.users, user)
+}
+
+func (i *valueWithUsers) RemoveFromUsers(v Value) {
+	usersI := ds.RemoveFromSlice(ds.ToInterfaceSlice(i.users), v)
+	users := make([]Value, len(usersI))
+	for i, userI := range usersI {
+		users[i] = userI.(Value)
+	}
+	i.users = users
 }
 
 type valueWithNoName struct{}

@@ -1,6 +1,7 @@
 package ssa
 
 import (
+	"bitbucket.org/dhaliwalprince/funlang/ds"
 	"fmt"
 	"strconv"
 
@@ -70,6 +71,8 @@ func (t *transformer) load(val Value) *LoadInstr {
 	instr := &LoadInstr{users: []Value{},
 		valueWithName: valueWithName{name: t.nextTemp()}}
 	instr.instrWithOperands = t.operands(instr, val)
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.parent = t.function.current
 	return instr
 }
 
@@ -81,11 +84,16 @@ func (t *transformer) store(dest Value, src Value) *StoreInstr {
 
 	instr := &StoreInstr{}
 	instr.instrWithOperands = t.operands(instr, dest, src)
+	instr.listElement = &ds.ListElement{Next:nil, Prev:nil, Value: instr}
+	instr.parent = t.function.current
 	return instr
 }
 
 func (trans *transformer) alloc(t types.Type) *AllocInstr {
-	return &AllocInstr{t: t, valueWithName: valueWithName{name: trans.nextTemp()}}
+	instr := &AllocInstr{t: t, valueWithName: valueWithName{name: trans.nextTemp()}}
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.parent = trans.function.current
+	return instr
 }
 
 func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
@@ -100,7 +108,9 @@ func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
 		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
 
+	instr.parent = t.function.current
 	instr.instrWithOperands = t.operands(instr, val, member)
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -115,7 +125,9 @@ func (t *transformer) index(val Value, member Value) *IndexInstr {
 		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
 
+	instr.parent = t.function.current
 	instr.instrWithOperands = t.operands(instr, val, member)
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -170,7 +182,9 @@ func (t *transformer) arith(op ArithOpcode, l, r Value) Value {
 		instrWithOperands: instrWithOperands{operands: []Value{l, r}},
 		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
+	instr.parent = t.function.current
 	instr.instrWithOperands = t.operands(instr, l, r)
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -179,10 +193,14 @@ func (t *transformer) gotoif(condition Value, ontrue, onfalse *BasicBlock) *Cond
 		instrWithOperands: instrWithOperands{operands: []Value{condition, ontrue, onfalse}},
 	}
 
+	instr.parent = t.function.current
 	condition.AddUser(instr)
 	ontrue.AddUser(instr)
 	onfalse.AddUser(instr)
+	t.function.current.AddSucc(ontrue)
+	t.function.current.AddSucc(onfalse)
 	// not tracking users for basicblocks
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -190,7 +208,10 @@ func (t *transformer) goTo(block *BasicBlock) *UnconditionalGoto {
 	instr := &UnconditionalGoto{
 		instrWithOperands: instrWithOperands{operands: []Value{block}},
 	}
+	instr.parent = t.function.current
 	block.AddUser(instr)
+	t.function.current.AddSucc(block)
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -204,10 +225,12 @@ func (t *transformer) call(f *Function, args ...Value) *CallInstr {
 		valueWithName:     valueWithName{name: t.nextTemp()},
 	}
 
+	instr.parent = t.function.current
 	for _, op := range instr.operands {
 		op.AddUser(instr)
 	}
 
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -217,7 +240,10 @@ func (t *transformer) ret(val Value) *RetInstr {
 		if retType != nil {
 			panic("return cannot be nil for functions with non-nil return type ")
 		} else {
-			return &RetInstr{}
+			instr := &RetInstr{}
+			instr.parent = t.function.current
+			instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+			return instr
 		}
 	}
 
@@ -228,7 +254,9 @@ func (t *transformer) ret(val Value) *RetInstr {
 			instrWithOperands: instrWithOperands{operands: []Value{val}},
 		}
 
+		instr.parent = t.function.current
 		val.AddUser(instr)
+		instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 		return instr
 	}
 }
@@ -238,6 +266,8 @@ func (t *transformer) phi(edges []*PhiEdge) *PhiNode {
 	for _, edge := range edges {
 		edge.Value.AddUser(instr)
 	}
+	instr.parent = t.function.current
+	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
 	return instr
 }
 

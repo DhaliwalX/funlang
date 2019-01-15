@@ -1,5 +1,6 @@
 package ssa
 
+import "fmt"
 
 type registry map[string]Pass
 var Registry registry
@@ -14,6 +15,7 @@ func GetPass(name string) Pass {
 }
 
 func RegisterPass(name string, p Pass) {
+	fmt.Println("registered pass:", name)
 	Registry[name] = p
 }
 

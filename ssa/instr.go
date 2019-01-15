@@ -2,6 +2,7 @@
 package ssa
 
 import (
+	"bitbucket.org/dhaliwalprince/funlang/ds"
 	"fmt"
 	"strings"
 
@@ -11,13 +12,44 @@ import (
 type Instruction interface {
 	Value
 	Operands() []Value
+	SetOperand(i int, v Value)
 	Operand(i int) Value
+	Parent() *BasicBlock
+	Next() Instruction
+	Prev() Instruction
+	Elem() *ds.ListElement
 }
 
-type instrNode struct{}
+type instrNode struct{
+	parent *BasicBlock
+	listElement *ds.ListElement
+}
 
-func (i instrNode) Tag() ValueTag {
+func (i *instrNode) Tag() ValueTag {
 	return INSTRUCTION
+}
+
+func (i *instrNode) Parent() *BasicBlock {
+	return i.parent
+}
+
+func (i *instrNode) Next() Instruction {
+	if i.listElement.Next == nil {
+		return nil
+	}
+	return i.listElement.Next.Value.(Instruction)
+}
+
+func (i *instrNode) Prev() Instruction {
+	if i.listElement.Prev == nil {
+		return nil
+	}
+
+	return i.listElement.Prev.Value.(Instruction)
+}
+
+func (i *instrNode) Elem() *ds.ListElement {
+	return i.listElement
 }
 
 type instrWithOperands struct {
@@ -26,6 +58,10 @@ type instrWithOperands struct {
 
 func (i *instrWithOperands) AddOperand(operand Value) {
 	i.operands = append(i.operands, operand)
+}
+
+func (i *instrWithOperands) SetOperand(idx int, v Value) {
+	i.operands[idx] = v
 }
 
 func (in *instrWithOperands) Operand(i int) Value {
@@ -82,6 +118,8 @@ func (a *AllocInstr) AddOperand(operand Value) {
 	return
 }
 
+func (a *AllocInstr) SetOperand(i int, v Value) {}
+
 func (a *AllocInstr) Operand(i int) Value {
 	return nil
 }
@@ -130,6 +168,8 @@ func (s *StoreInstr) Users() []Value {
 func (s *StoreInstr) AddUser(user Value) {
 	return
 }
+
+func (s *StoreInstr) RemoveFromUsers(user Value) {}
 
 func (s *StoreInstr) Name() string {
 	return ""
@@ -266,6 +306,10 @@ func (a *ArithInstr) String() string {
 		a.Operand(1).ShortString())
 }
 
+type TerminatingInstr interface {
+	terminatingInstr()
+}
+
 // control flow instructions
 //  if true:int goto $label else goto $label
 //  r:int = %add(a:int, b:int)
@@ -280,9 +324,13 @@ func (c *ConditionalGoto) Users() []Value {
 	return []Value{}
 }
 
+func (c *ConditionalGoto) terminatingInstr() {}
+
 func (c *ConditionalGoto) AddUser(user Value) {
 	return
 }
+
+func (c *ConditionalGoto) RemoveFromUsers(v Value) {}
 
 func (c *ConditionalGoto) Type() types.Type {
 	return nil
@@ -337,9 +385,13 @@ type RetInstr struct {
 	valueWithNoName
 }
 
+func (r *RetInstr) terminatingInstr() {}
+
 func (r *RetInstr) Type() types.Type {
 	return nil
 }
+
+func (r *RetInstr) RemoveFromUsers(v Value) {}
 
 func (r *RetInstr) Users() []Value {
 	return []Value{}
@@ -365,9 +417,13 @@ type UnconditionalGoto struct {
 	valueWithNoName
 }
 
+func (u *UnconditionalGoto) terminatingInstr() {}
+
 func (u *UnconditionalGoto) Type() types.Type {
 	return nil
 }
+
+func (u *UnconditionalGoto) RemoveFromUsers(v Value) {}
 
 func (u *UnconditionalGoto) ShortString() string {
 	return u.String()

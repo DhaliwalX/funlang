@@ -3,6 +3,7 @@ package analysis
 import (
 	"bitbucket.org/dhaliwalprince/funlang/res"
 	"bitbucket.org/dhaliwalprince/funlang/ssa"
+	"fmt"
 )
 
 type DominatorAnalysisInfo struct {
@@ -25,7 +26,11 @@ func (d *DominatorAnalysis) IsAnalysisPass() bool {
 }
 
 func (d *DominatorAnalysis) Run(f *ssa.Function) bool {
+	if len(f.Blocks) == 1 {
+		return false
+	}
 	g := res.CreateGraph(f.Blocks)
+	fmt.Print(g.Dot())
 	info := res.ComputeDominators(g)
 	d.info = &DominatorAnalysisInfo{Util: info}
 	frontiers := res.ComputeDominanceFrontiers(g, d.info.Util)
