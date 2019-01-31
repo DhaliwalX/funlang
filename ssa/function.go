@@ -1,9 +1,10 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/types"
 	"fmt"
 	"strings"
+
+	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
 type Argument struct {
@@ -37,13 +38,16 @@ type Function struct {
 	valueWithUsers
 
 	Blocks []*BasicBlock
-	t types.Type
-	Args map[string]*Argument
+	t      types.Type
+	Args   map[string]*Argument
 
 	// these fields are required while creating ssa
 	current *BasicBlock
-	locals map[string]Value
-	Extern bool
+	locals  map[string]Value
+	Extern  bool
+
+	// for names
+	nameCount int
 }
 
 func (f *Function) Uses() []Value {
@@ -66,6 +70,10 @@ func (f *Function) GetArg(name string) *Argument {
 	return f.Args[name]
 }
 
+func (f *Function) NextName() string {
+	f.nameCount = f.nameCount + 1
+	return fmt.Sprintf("t%d", f.nameCount)
+}
 
 func (f *Function) String() string {
 	builder := strings.Builder{}

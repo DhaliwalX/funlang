@@ -7,12 +7,11 @@ import (
 	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
-
 type BasicBlock struct {
 	valueWithUsers
 	valueWithName
 	First Instruction
-	Last Instruction
+	Last  Instruction
 
 	Preds, Succs []*BasicBlock
 	Parent       *Function
@@ -29,6 +28,20 @@ func (b *BasicBlock) Instructions() []Instruction {
 		elements = append(elements, i)
 	}
 	return elements
+}
+
+func (b *BasicBlock) PushFront(val Instruction) {
+	if b.Last == nil || b.First == nil {
+		b.appendInstr(val)
+		return
+	}
+	val.Elem().Next = b.First.Elem()
+	val.Elem().Prev = nil
+	b.First.Elem().Next = val.Elem()
+}
+
+func (b *BasicBlock) AppendInstr(val Instruction) {
+	b.appendInstr(val)
 }
 
 func (b *BasicBlock) appendInstr(val Instruction) {

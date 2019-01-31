@@ -1,15 +1,32 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ds"
 	"fmt"
 	"strconv"
+
+	"bitbucket.org/dhaliwalprince/funlang/ds"
 
 	"bitbucket.org/dhaliwalprince/funlang/ast"
 	"bitbucket.org/dhaliwalprince/funlang/context"
 	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"bitbucket.org/dhaliwalprince/funlang/types"
 )
+
+func NewPhiNode(edges []*PhiEdge, f *Function) *PhiNode {
+	phi := &PhiNode{valueWithName: valueWithName{name: f.NextName()}, Edges: edges}
+
+	for _, edge := range edges {
+		edge.Block.AddUser(phi)
+
+		// mem2reg pass will often generate nil value entries while placing
+		// phis.
+		if edge.Value != nil {
+			edge.Value.AddUser(phi)
+		}
+	}
+
+	return phi
+}
 
 // transform AST to SSA
 type transformer struct {
@@ -50,8 +67,7 @@ func isArray(val Value) bool {
 }
 
 func (t *transformer) nextTemp() string {
-	t.counter++
-	return "t" + fmt.Sprint(t.counter)
+	return t.function.NextName()
 }
 
 func (t *transformer) operands(user Value, ops ...Value) instrWithOperands {
@@ -71,7 +87,7 @@ func (t *transformer) load(val Value) *LoadInstr {
 	instr := &LoadInstr{users: []Value{},
 		valueWithName: valueWithName{name: t.nextTemp()}}
 	instr.instrWithOperands = t.operands(instr, val)
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	instr.parent = t.function.current
 	return instr
 }
@@ -84,14 +100,14 @@ func (t *transformer) store(dest Value, src Value) *StoreInstr {
 
 	instr := &StoreInstr{}
 	instr.instrWithOperands = t.operands(instr, dest, src)
-	instr.listElement = &ds.ListElement{Next:nil, Prev:nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	instr.parent = t.function.current
 	return instr
 }
 
 func (trans *transformer) alloc(t types.Type) *AllocInstr {
 	instr := &AllocInstr{t: t, valueWithName: valueWithName{name: trans.nextTemp()}}
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	instr.parent = trans.function.current
 	return instr
 }
@@ -110,7 +126,7 @@ func (t *transformer) member(val Value, member *ConstantString) *MemberInstr {
 
 	instr.parent = t.function.current
 	instr.instrWithOperands = t.operands(instr, val, member)
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -127,7 +143,7 @@ func (t *transformer) index(val Value, member Value) *IndexInstr {
 
 	instr.parent = t.function.current
 	instr.instrWithOperands = t.operands(instr, val, member)
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -184,7 +200,7 @@ func (t *transformer) arith(op ArithOpcode, l, r Value) Value {
 	}
 	instr.parent = t.function.current
 	instr.instrWithOperands = t.operands(instr, l, r)
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -200,7 +216,7 @@ func (t *transformer) gotoif(condition Value, ontrue, onfalse *BasicBlock) *Cond
 	t.function.current.AddSucc(ontrue)
 	t.function.current.AddSucc(onfalse)
 	// not tracking users for basicblocks
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -211,7 +227,7 @@ func (t *transformer) goTo(block *BasicBlock) *UnconditionalGoto {
 	instr.parent = t.function.current
 	block.AddUser(instr)
 	t.function.current.AddSucc(block)
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -230,7 +246,7 @@ func (t *transformer) call(f *Function, args ...Value) *CallInstr {
 		op.AddUser(instr)
 	}
 
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 
@@ -242,7 +258,7 @@ func (t *transformer) ret(val Value) *RetInstr {
 		} else {
 			instr := &RetInstr{}
 			instr.parent = t.function.current
-			instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+			instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 			return instr
 		}
 	}
@@ -256,7 +272,7 @@ func (t *transformer) ret(val Value) *RetInstr {
 
 		instr.parent = t.function.current
 		val.AddUser(instr)
-		instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+		instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 		return instr
 	}
 }
@@ -267,7 +283,7 @@ func (t *transformer) phi(edges []*PhiEdge) *PhiNode {
 		edge.Value.AddUser(instr)
 	}
 	instr.parent = t.function.current
-	instr.listElement = &ds.ListElement{Next:nil, Prev: nil, Value: instr}
+	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
 

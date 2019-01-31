@@ -2,21 +2,24 @@
 package passes
 
 import (
+	"fmt"
+
 	"bitbucket.org/dhaliwalprince/funlang/ssa"
 	"bitbucket.org/dhaliwalprince/funlang/ssa/analysis"
-	"fmt"
 )
 
 var debug = true
 
 type allocInfo struct {
-	parent *ssa.BasicBlock
+	parent      *ssa.BasicBlock
 	singleStore *ssa.StoreInstr
+	stores      []*ssa.StoreInstr
 }
 
 // returns true if we can promote this alloca
 func isAllocaPromotable(a *ssa.AllocInstr) (bool, *allocInfo) {
 	var store *ssa.StoreInstr
+	var stores []*ssa.StoreInstr
 	singleStore := false
 	for _, user := range a.Users() {
 		switch i := user.(type) {
@@ -31,6 +34,7 @@ func isAllocaPromotable(a *ssa.AllocInstr) (bool, *allocInfo) {
 				store = i
 				singleStore = true
 			}
+			stores = append(stores, i)
 
 		case *ssa.IndexInstr:
 			if i.Operand(0) == a {
@@ -51,8 +55,17 @@ func isAllocaPromotable(a *ssa.AllocInstr) (bool, *allocInfo) {
 	return true, info
 }
 
+type phiEntry struct {
+	phi   *ssa.PhiNode
+	alloc *ssa.AllocInstr
+}
+
+type phiMap map[int][]phiEntry
+
 type Mem2RegPass struct {
-	dom *analysis.DominatorAnalysisInfo
+	dom     *analysis.DominatorAnalysisInfo
+	current *ssa.Function
+	phiMap  phiMap
 }
 
 func (m *Mem2RegPass) IsAnalysisPass() bool {
@@ -64,7 +77,7 @@ func (m *Mem2RegPass) replaceLoads(a *ssa.AllocInstr, v ssa.Value) bool {
 	for _, u := range a.Users() {
 		if l, ok := u.(*ssa.LoadInstr); ok {
 			if ssa.Remove(l) != l {
-				panic("unable to remove instr: "+l.String())
+				panic("unable to remove instr: " + l.String())
 			}
 
 			ssa.ReplaceInstr(l, v)
@@ -75,12 +88,36 @@ func (m *Mem2RegPass) replaceLoads(a *ssa.AllocInstr, v ssa.Value) bool {
 	return changed
 }
 
+func (m *Mem2RegPass) placePhi(bb *ssa.BasicBlock) *ssa.PhiNode {
+	edges := []*ssa.PhiEdge{}
+	for _, pred := range bb.Preds {
+		edges = append(edges, &ssa.PhiEdge{pred, nil})
+	}
+
+	phi := ssa.NewPhiNode(edges, m.current)
+	bb.PushFront(phi)
+	return phi
+}
+
+func (m *Mem2RegPass) insertPhi(frontiers []int, a *ssa.AllocInstr) {
+	for _, frontier := range frontiers {
+		frontierBB := m.current.Blocks[frontier]
+		phi := m.placePhi(frontierBB)
+		m.phiMap[frontier] = append(m.phiMap[frontier], phiEntry{phi, a})
+	}
+}
+
 func (m *Mem2RegPass) promote(a *ssa.AllocInstr, info *allocInfo) bool {
 	if info.singleStore != nil {
 		v := info.singleStore.Operand(1)
 		ssa.Remove(a)
 		ssa.Remove(info.singleStore)
 		return m.replaceLoads(a, v)
+	}
+
+	for _, store := range info.stores {
+		domFrontiers := m.dom.Frontiers[store.Parent().Index]
+		m.insertPhi(domFrontiers, a)
 	}
 
 	return false
@@ -90,9 +127,9 @@ func (m *Mem2RegPass) Run(f *ssa.Function) bool {
 	// this expects that dominator analysis has been already run
 	dominatorAnalysis := ssa.GetPass("dominators")
 	m.dom = dominatorAnalysis.(*analysis.DominatorAnalysis).GetInfo().(*analysis.DominatorAnalysisInfo)
+	m.current = f
 	changed := false
 	var allocas map[*ssa.AllocInstr]*allocInfo
-
 
 	allocas = make(map[*ssa.AllocInstr]*allocInfo)
 	// collect all allocas
@@ -107,7 +144,6 @@ func (m *Mem2RegPass) Run(f *ssa.Function) bool {
 			}
 		}
 	}
-
 
 	if debug {
 		fmt.Println("Promotable allocas:")
