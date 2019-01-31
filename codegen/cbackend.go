@@ -1,20 +1,20 @@
 package codegen
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
-	"bitbucket.org/dhaliwalprince/funlang/types"
 	"fmt"
+	"funlang/ssa"
+	"funlang/types"
 	"strings"
 )
 
 type gofunction struct {
 	blocks map[*ssa.BasicBlock]string
-	decls map[string]string
+	decls  map[string]string
 }
 
 func (f *gofunction) addDecl(name, t string) {
 	if dt, _ := f.decls[name]; dt != t {
-		panic("multiple decls for "+name+" t: "+t)
+		panic("multiple decls for " + name + " t: " + t)
 	}
 	f.decls[name] = t
 }
@@ -29,7 +29,7 @@ type goBackendState struct {
 
 type GoBackend struct {
 	builder strings.Builder
-	state goBackendState
+	state   goBackendState
 }
 
 func (backend *GoBackend) String() string {
@@ -70,7 +70,7 @@ func (backend *GoBackend) writeCall(c *ssa.CallInstr) {
 		}
 
 		backend.write(arg.Name())
-		if i != len(c.Operands()) - 1 {
+		if i != len(c.Operands())-1 {
 			backend.write(",")
 		}
 	}

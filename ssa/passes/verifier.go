@@ -1,9 +1,9 @@
 package passes
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ds"
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
 	"fmt"
+	"funlang/ds"
+	"funlang/ssa"
 )
 
 type Verifier struct {

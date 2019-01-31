@@ -1,9 +1,9 @@
 package parse
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ast"
-	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"errors"
+	"funlang/ast"
+	"funlang/lex"
 )
 
 func (parser *Parser) parseForStatement() ast.Statement {
@@ -82,7 +82,7 @@ func (parser *Parser) parseFunction() ast.Statement {
 	if parser.current.Type() != lex.SEMICOLON {
 		b := parser.parseBlockStatement()
 		if b == nil {
-			parser.errs.append(newParseError(parser.current,"expected a function body"))
+			parser.errs.append(newParseError(parser.current, "expected a function body"))
 			return nil
 		}
 		body = b.(*ast.BlockStatement)

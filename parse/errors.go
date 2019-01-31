@@ -1,18 +1,18 @@
 package parse
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"fmt"
+	"funlang/lex"
 	"strings"
 )
 
 type parseError struct {
 	message string
-	token lex.Token
+	token   lex.Token
 }
 
 func newParseError(token lex.Token, message string) parseError {
-	return parseError{token:token, message:message}
+	return parseError{token: token, message: message}
 }
 
 func (e parseError) Error() string {
@@ -34,7 +34,7 @@ func (list *errorList) append(err error) {
 func (list *errorList) Error() string {
 	builder := strings.Builder{}
 	for _, err := range list.list {
-		builder.WriteString(err.Error()+"\n")
+		builder.WriteString(err.Error() + "\n")
 	}
 
 	return builder.String()

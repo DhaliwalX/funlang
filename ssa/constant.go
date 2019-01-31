@@ -1,8 +1,8 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/types"
 	"fmt"
+	"funlang/types"
 )
 
 type ConstantInt struct {

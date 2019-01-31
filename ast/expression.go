@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"bitbucket.org/dhaliwalprince/funlang/lex"
-	"bitbucket.org/dhaliwalprince/funlang/types"
+	"funlang/lex"
+	"funlang/types"
 )
 
 type Expression interface {

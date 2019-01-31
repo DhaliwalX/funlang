@@ -1,15 +1,15 @@
 package analysis
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/res"
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
 	"fmt"
+	"funlang/res"
+	"funlang/ssa"
 )
 
 type DominatorAnalysisInfo struct {
-	Util *res.DomInfo
+	Util      *res.DomInfo
 	Frontiers [][]int
-	Graph res.Graph
+	Graph     res.Graph
 }
 
 // this analysis will compute dominators information about the graph

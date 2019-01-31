@@ -1,10 +1,10 @@
 package passes
 
-import "bitbucket.org/dhaliwalprince/funlang/ssa"
+import "funlang/ssa"
 
 // Dead Code Eliminator
 
-type DCE struct {}
+type DCE struct{}
 
 func (d *DCE) IsAnalysisPass() bool {
 	return false
@@ -23,7 +23,8 @@ func (d *DCE) Run(b *ssa.BasicBlock) bool {
 	}
 
 	die := ssa.GetPass("die")
-	for die.(*DeadInstructionElimination).Run(b) {}
+	for die.(*DeadInstructionElimination).Run(b) {
+	}
 	return changed
 }
 

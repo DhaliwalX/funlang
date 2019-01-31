@@ -1,10 +1,11 @@
 /// type checking/resolving logic
 package sema
+
 //
 //import (
-//	"bitbucket.org/dhaliwalprince/funlang/ast"
-//	"bitbucket.org/dhaliwalprince/funlang/lex"
-//	"bitbucket.org/dhaliwalprince/funlang/types"
+//	"funlang/ast"
+//	"funlang/lex"
+//	"funlang/types"
 //	"fmt"
 //)
 //
@@ -202,4 +203,3 @@ package sema
 //
 //	return nil
 //}
-

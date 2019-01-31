@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/parse"
-	"bitbucket.org/dhaliwalprince/funlang/sema"
+	"funlang/context"
+	"funlang/parse"
+	"funlang/sema"
 )
 
 func newTestFunction() *Function {

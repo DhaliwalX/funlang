@@ -1,15 +1,15 @@
 package parse
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ast"
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"funlang/ast"
+	"funlang/context"
+	"funlang/lex"
 	"testing"
 )
 
 func newParser(source string) *Parser {
 	stringSource := lex.NewStringSource(source)
-	p := &Parser{ lex: lex.NewLexer(stringSource), errs: errorList{}, builder: ast.NewBuilder(&context.Context{})  }
+	p := &Parser{lex: lex.NewLexer(stringSource), errs: errorList{}, builder: ast.NewBuilder(&context.Context{})}
 	return p
 }
 

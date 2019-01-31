@@ -1,8 +1,8 @@
 package parse
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ast"
-	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"funlang/ast"
+	"funlang/lex"
 )
 
 func (parser *Parser) parseNumber() *ast.NumericLiteral {

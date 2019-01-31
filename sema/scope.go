@@ -1,8 +1,8 @@
 package sema
 
-import "bitbucket.org/dhaliwalprince/funlang/ast"
+import "funlang/ast"
 
-type AlreadyDefined struct {}
+type AlreadyDefined struct{}
 
 func (AlreadyDefined) Error() string {
 	return "already defined"
@@ -10,12 +10,12 @@ func (AlreadyDefined) Error() string {
 
 // scope is part of ast
 type Scope struct {
-	outer *Scope
+	outer   *Scope
 	symbols map[string]*ast.Object
 }
 
 func NewScope(outer *Scope) *Scope {
-	return &Scope{ outer: outer, symbols: make(map[string]*ast.Object)}
+	return &Scope{outer: outer, symbols: make(map[string]*ast.Object)}
 }
 
 func (scope *Scope) Outer() *Scope {

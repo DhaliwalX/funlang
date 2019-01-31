@@ -3,8 +3,8 @@ package ast
 import (
 	"fmt"
 
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/lex"
+	"funlang/context"
+	"funlang/lex"
 )
 
 type Builder struct {

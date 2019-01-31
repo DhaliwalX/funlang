@@ -1,7 +1,7 @@
 package parse
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ast"
+	"funlang/ast"
 	"testing"
 )
 
@@ -33,7 +33,6 @@ func TestParseEmptyExpression(t *testing.T) {
 
 	t.Log(stmt)
 }
-
 
 func TestParseReturnStatement(t *testing.T) {
 	parser := newParser("return expr;")

@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"fmt"
+	"funlang/lex"
 	"strings"
 )
 
@@ -12,8 +12,8 @@ type Statement interface {
 }
 
 type BlockStatement struct {
-	pos lex.Position
-	end lex.Position
+	pos   lex.Position
+	end   lex.Position
 	stmts []Statement
 }
 
@@ -49,11 +49,11 @@ func (e *ExpressionStmt) Expr() Expression {
 }
 
 type FunctionProtoType struct {
-	pos lex.Position
-	end lex.Position
+	pos  lex.Position
+	end  lex.Position
 	name string
 	args []DeclNode
-	ret Expression
+	ret  Expression
 }
 
 func (proto *FunctionProtoType) Name() string {
@@ -72,7 +72,7 @@ type FunctionStatement struct {
 	proto *FunctionProtoType
 	// for linking c functions
 	isExtern bool
-	body *BlockStatement
+	body     *BlockStatement
 }
 
 func (f *FunctionStatement) Proto() *FunctionProtoType {
@@ -115,13 +115,13 @@ type DeclarationStatement struct {
 	decl DeclNode
 }
 
-func (*BlockStatement) stmt() {}
-func (*ForStatement) stmt() {}
-func (*ExpressionStmt) stmt() {}
-func (*FunctionProtoType) stmt() {}
-func (*FunctionStatement) stmt() {}
-func (*IfElseStatement) stmt() {}
-func (*ReturnStatement) stmt() {}
+func (*BlockStatement) stmt()       {}
+func (*ForStatement) stmt()         {}
+func (*ExpressionStmt) stmt()       {}
+func (*FunctionProtoType) stmt()    {}
+func (*FunctionStatement) stmt()    {}
+func (*IfElseStatement) stmt()      {}
+func (*ReturnStatement) stmt()      {}
 func (*DeclarationStatement) stmt() {}
 
 func (b *BlockStatement) Beg() lex.Position { return b.pos }

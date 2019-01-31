@@ -1,13 +1,12 @@
 package sema
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ast"
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/parse"
 	"fmt"
+	"funlang/ast"
+	"funlang/context"
+	"funlang/parse"
 	"testing"
 )
-
 
 type IdentPrinter struct {
 }

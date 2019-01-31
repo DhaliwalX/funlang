@@ -3,9 +3,8 @@ package passes
 
 import (
 	"fmt"
-
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
-	"bitbucket.org/dhaliwalprince/funlang/ssa/analysis"
+	"funlang/ssa"
+	"funlang/ssa/analysis"
 )
 
 var debug = true

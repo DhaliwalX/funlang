@@ -1,8 +1,8 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ds"
-	"bitbucket.org/dhaliwalprince/funlang/types"
+	"funlang/ds"
+	"funlang/types"
 )
 
 type ValueTag int

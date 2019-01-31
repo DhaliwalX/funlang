@@ -1,10 +1,10 @@
 package passes
 
-import "bitbucket.org/dhaliwalprince/funlang/ssa"
+import "funlang/ssa"
 
 // DeadInstructionElimination removes those instruction
 // which are not used and does not cause any side effect
-type DeadInstructionElimination struct {}
+type DeadInstructionElimination struct{}
 
 func canRemove(i ssa.Instruction) bool {
 	if ssa.IsSideEffect(i) {
@@ -36,4 +36,3 @@ func (d *DeadInstructionElimination) Run(b *ssa.BasicBlock) bool {
 func init() {
 	ssa.RegisterPass("die", &DeadInstructionElimination{})
 }
-

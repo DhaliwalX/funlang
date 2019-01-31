@@ -1,14 +1,14 @@
 package main
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/parse"
-	"bitbucket.org/dhaliwalprince/funlang/sema"
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
-	_ "bitbucket.org/dhaliwalprince/funlang/ssa/analysis"
-	_ "bitbucket.org/dhaliwalprince/funlang/ssa/passes"
 	"flag"
 	"fmt"
+	"funlang/context"
+	"funlang/parse"
+	"funlang/sema"
+	"funlang/ssa"
+	_ "funlang/ssa/analysis"
+	_ "funlang/ssa/passes"
 	"os"
 	"runtime/pprof"
 )

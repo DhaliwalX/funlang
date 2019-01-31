@@ -1,8 +1,8 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/types"
+	"funlang/context"
+	"funlang/types"
 )
 
 var typeFactory *types.Factory

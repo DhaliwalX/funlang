@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"bitbucket.org/dhaliwalprince/funlang/types"
+	"funlang/types"
 )
 
 type BasicBlock struct {

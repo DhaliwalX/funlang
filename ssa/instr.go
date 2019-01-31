@@ -2,11 +2,11 @@
 package ssa
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ds"
 	"fmt"
+	"funlang/ds"
 	"strings"
 
-	"bitbucket.org/dhaliwalprince/funlang/types"
+	"funlang/types"
 )
 
 type Instruction interface {
@@ -20,8 +20,8 @@ type Instruction interface {
 	Elem() *ds.ListElement
 }
 
-type instrNode struct{
-	parent *BasicBlock
+type instrNode struct {
+	parent      *BasicBlock
 	listElement *ds.ListElement
 }
 

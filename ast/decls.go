@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"fmt"
+	"funlang/lex"
 )
 
 type DeclNode interface {
@@ -30,14 +30,14 @@ func (d *Declaration) Init() Expression {
 }
 
 type DeclarationList struct {
-	pos lex.Position
+	pos   lex.Position
 	decls []*Declaration
 }
 
 type TypeDeclaration struct {
-	pos lex.Position
-	end lex.Position
-	t Expression
+	pos  lex.Position
+	end  lex.Position
+	t    Expression
 	name Expression
 }
 
@@ -53,7 +53,7 @@ func (t *TypeDeclaration) Ident() *Identifier {
 	return t.name.(*Identifier)
 }
 
-func (*Declaration) decl() {}
+func (*Declaration) decl()     {}
 func (*DeclarationList) decl() {}
 func (*TypeDeclaration) decl() {}
 

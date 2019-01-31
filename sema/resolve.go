@@ -2,14 +2,14 @@
 package sema
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/ast"
-	"bitbucket.org/dhaliwalprince/funlang/lex"
 	"fmt"
+	"funlang/ast"
+	"funlang/lex"
 )
 
 // resolves all the symbols of the program and links them
 type resolver struct {
-	topScope *Scope
+	topScope   *Scope
 	unresolved []*ast.Identifier
 
 	errs []error
@@ -66,13 +66,13 @@ func resolve2(r *resolver, node ast.Node) {
 func makeObject(kind ast.ObjKind, data interface{}, position lex.Position) *ast.Object {
 	switch kind {
 	case ast.VAR:
-		return &ast.Object{Kind:kind, Decl: data, Pos:position}
+		return &ast.Object{Kind: kind, Decl: data, Pos: position}
 
 	case ast.TYPE:
-		return &ast.Object{Kind:kind, Type:data, Pos:position}
+		return &ast.Object{Kind: kind, Type: data, Pos: position}
 
 	default:
-		return &ast.Object{Kind:ast.DONT_KNOW}
+		return &ast.Object{Kind: ast.DONT_KNOW}
 	}
 }
 
@@ -91,14 +91,14 @@ func (r *resolver) resolveMemberExpression(m *ast.MemberExpression) {
 		resolve2(r, m.Member())
 
 	default:
-		panic("undefined operation"+m.AccessKind().String())
+		panic("undefined operation" + m.AccessKind().String())
 	}
 }
 
 func (r *resolver) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
 	case *ast.Declaration:
-		o := ast.Object{Type:n.Type(), Decl:n, Kind:ast.VAR, Name: n.Name(), Pos: n.Beg()}
+		o := ast.Object{Type: n.Type(), Decl: n, Kind: ast.VAR, Name: n.Name(), Pos: n.Beg()}
 		r.resolve(n.Name(), &o)
 
 		if n.Init() != nil {
@@ -117,7 +117,7 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 		}
 
 	case *ast.TypeDeclaration:
-		o := &ast.Object{Type:n.Type(), Pos:n.Beg(), Decl:n, Kind:ast.TYPE, Name: n.Name()}
+		o := &ast.Object{Type: n.Type(), Pos: n.Beg(), Decl: n, Kind: ast.TYPE, Name: n.Name()}
 		r.resolve(n.Name(), o)
 		n.Ident().Object = o
 		resolve2(r, n.Type())
@@ -138,7 +138,7 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 	case *ast.StringLiteral:
 	case *ast.BooleanLiteral:
 		// do nothing
-		func(){}()
+		func() {}()
 
 	case *ast.ArgumentList:
 		for _, arg := range n.Exprs() {
@@ -178,7 +178,7 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 		resolve2(r, n.Expr())
 
 	case *ast.FunctionStatement:
-		o := &ast.Object{Kind:ast.VAR, Name: n.Proto().Name(), Decl:n, Type:n.Proto()}
+		o := &ast.Object{Kind: ast.VAR, Name: n.Proto().Name(), Decl: n, Type: n.Proto()}
 		r.resolve(n.Proto().Name(), o)
 		resolve2(r, n.Proto().Return())
 		if n.Body() == nil {
@@ -211,4 +211,3 @@ func (r *resolver) Visit(node ast.Node) ast.Visitor {
 
 	return nil
 }
-

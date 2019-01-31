@@ -2,14 +2,13 @@ package ssa
 
 import (
 	"fmt"
+	"funlang/ds"
 	"strconv"
 
-	"bitbucket.org/dhaliwalprince/funlang/ds"
-
-	"bitbucket.org/dhaliwalprince/funlang/ast"
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/lex"
-	"bitbucket.org/dhaliwalprince/funlang/types"
+	"funlang/ast"
+	"funlang/context"
+	"funlang/lex"
+	"funlang/types"
 )
 
 func NewPhiNode(edges []*PhiEdge, f *Function) *PhiNode {

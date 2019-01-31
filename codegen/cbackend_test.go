@@ -1,11 +1,11 @@
 package codegen
 
 import (
-	"bitbucket.org/dhaliwalprince/funlang/context"
-	"bitbucket.org/dhaliwalprince/funlang/parse"
-	"bitbucket.org/dhaliwalprince/funlang/sema"
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
 	"fmt"
+	"funlang/context"
+	"funlang/parse"
+	"funlang/sema"
+	"funlang/ssa"
 	"testing"
 )
 
