@@ -1,5 +1,4 @@
-bitbucket.org/dhaliwalprince/funlang v0.0.0-20190131164512-e205f629cee5 h1:AvkQkrhqeG4gTUuxC3VLEi03rBQcenihcgAI6JGlTeQ=
-bitbucket.org/dhaliwalprince/funlang v0.0.0-20190131164512-e205f629cee5/go.mod h1:kIF26ImJmU26BhObqagIU6hNw6GBzSGmCFLJRJIHlj0=
-funlang v0.0.0-20190115163003-6390fea6570b h1:BeW24DvIgW2Kg3aRHHbDXk0OMGn23Qv37bwP8Azt5Jc=
-funlang v0.0.0-20190115163003-6390fea6570b/go.mod h1:kIF26ImJmU26BhObqagIU6hNw6GBzSGmCFLJRJIHlj0=
-github.com/princedhaliwal/funlang v0.0.0-20190115163003-6390fea6570b/go.mod h1:gJLoYpJ6+zyXylNWSmVhVz/1kgam1rYO7EsWzlGRm0I=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+golang.org/x/tools v0.0.0-20190131163942-067a2f313b69 h1:ZsYLWiULFgNc5wXsaLzC18LPWmFo2NXxZTxNbthZHi4=
+golang.org/x/tools v0.0.0-20190131163942-067a2f313b69/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"funlang/types"
 	"strings"
-
-	"bitbucket.org/dhaliwalprince/funlang/types"
 )
 
 type Argument struct {

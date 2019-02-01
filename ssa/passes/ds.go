@@ -3,7 +3,7 @@ package passes
 import (
 	"math/big"
 
-	"bitbucket.org/dhaliwalprince/funlang/ssa"
+	"funlang/ssa"
 )
 
 type BlockSet struct {
