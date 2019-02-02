@@ -447,6 +447,9 @@ type PhiEdge struct {
 }
 
 func (p *PhiEdge) String() string {
+	if p.Value == nil {
+		return fmt.Sprint("[UNCOMPUTED]", " <- ", p.Block.ShortString())
+	}
 	return fmt.Sprintf("%s <- %s", p.Value.ShortString(), p.Block.ShortString())
 }
 

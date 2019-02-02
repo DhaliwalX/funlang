@@ -19,8 +19,20 @@ func RemoveFromUsers(i Instruction) {
 	}
 }
 
+// Remove removes instruction from parent and returns next
 func Remove(i Instruction) Instruction {
+	next := i.Next()
 	RemoveFromUsers(i)
 	i.Parent().Remove(i)
-	return i
+	return next
+}
+
+// ReplaceOperand replace operand o of instruction i with value v
+func ReplaceOperand(instr Instruction, o Value, v Value) {
+	for i, operand := range instr.Operands() {
+		if operand == o {
+			instr.SetOperand(i, v)
+			v.AddUser(instr)
+		}
+	}
 }

@@ -26,6 +26,7 @@ func (d *DominatorAnalysis) IsAnalysisPass() bool {
 }
 
 func (d *DominatorAnalysis) Run(f *ssa.Function) bool {
+	fmt.Println(f.Name(), "--")
 	if len(f.Blocks) == 1 {
 		return false
 	}
@@ -33,8 +34,10 @@ func (d *DominatorAnalysis) Run(f *ssa.Function) bool {
 	fmt.Print(g.Dot())
 	info := res.ComputeDominators(g)
 	d.info = &DominatorAnalysisInfo{Util: info}
+	fmt.Println(d.info.Util)
 	frontiers := res.ComputeDominanceFrontiers(g, d.info.Util)
 	d.info.Frontiers = frontiers
+	fmt.Println("Frontiers", d.info.Frontiers)
 	return false
 }
 

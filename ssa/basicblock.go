@@ -22,6 +22,16 @@ func (b *BasicBlock) AddSucc(s *BasicBlock) {
 	b.Succs = append(b.Succs, s)
 }
 
+// TODO: optimize this
+func (b *BasicBlock) AddPred(s *BasicBlock) {
+	for _, b := range s.Preds {
+		if b == s {
+			return
+		}
+	}
+	b.Preds = append(b.Preds, s)
+}
+
 func (b *BasicBlock) Instructions() []Instruction {
 	var elements []Instruction
 	for i := b.First; i != nil; i = i.Next() {
@@ -36,8 +46,9 @@ func (b *BasicBlock) PushFront(val Instruction) {
 		return
 	}
 	val.Elem().Next = b.First.Elem()
+	b.First.Elem().Prev = val.Elem()
 	val.Elem().Prev = nil
-	b.First.Elem().Next = val.Elem()
+	b.First = val
 }
 
 func (b *BasicBlock) AppendInstr(val Instruction) {

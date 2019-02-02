@@ -2,22 +2,27 @@ package passes
 
 import (
 	"math/big"
-
-	"funlang/ssa"
 )
 
 type BlockSet struct {
-	set *big.Int
+	big.Int
 }
 
-func (b *BlockSet) Add(bb *ssa.BasicBlock) bool {
-	if b.set.Bit(bb.Index) > 0 {
+func (b *BlockSet) add(id int) bool {
+	if b.Bit(id) > 0 {
 		return false
 	}
-	b.set.SetBit(b.set, bb.Index, 1)
+	b.SetBit(&b.Int, id, 1)
 	return true
 }
 
-func (b *BlockSet) Remove(bb *ssa.BasicBlock) {
-	b.set.SetBit(b.set, bb.Index, 0)
+func (b *BlockSet) take() int {
+	for i, l := 0, b.BitLen(); i < l; i++ {
+		if b.Bit(i) != 0 {
+			b.SetBit(&b.Int, i, 0)
+			return i
+		}
+	}
+
+	return -1
 }

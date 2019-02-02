@@ -15,3 +15,26 @@ func max(a int, b int) int {
         return b;
     }
 }
+
+func multipleDefs(a int) int {
+    var b = 10;
+    var max int;
+    if a > b {
+        max = a;
+    } else {
+        max = b;
+    }
+
+    return max;
+}
+
+// as of now will place phi in wrong block
+func loops(a int) int {
+    var b = 10;
+    for a > b {
+        var m = max(a, b);
+        b = m;
+    }
+
+    return b;
+}

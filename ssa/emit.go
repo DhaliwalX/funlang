@@ -11,9 +11,9 @@ import (
 	"funlang/types"
 )
 
-func NewPhiNode(edges []*PhiEdge, f *Function) *PhiNode {
+func NewPhiNode(edges []*PhiEdge, f *Function, bb *BasicBlock) *PhiNode {
 	phi := &PhiNode{valueWithName: valueWithName{name: f.NextName()}, Edges: edges}
-
+	phi.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: phi}
 	for _, edge := range edges {
 		edge.Block.AddUser(phi)
 
@@ -23,6 +23,8 @@ func NewPhiNode(edges []*PhiEdge, f *Function) *PhiNode {
 			edge.Value.AddUser(phi)
 		}
 	}
+
+	phi.parent = bb
 
 	return phi
 }
@@ -214,6 +216,9 @@ func (t *transformer) gotoif(condition Value, ontrue, onfalse *BasicBlock) *Cond
 	onfalse.AddUser(instr)
 	t.function.current.AddSucc(ontrue)
 	t.function.current.AddSucc(onfalse)
+
+	ontrue.AddPred(t.function.current)
+	onfalse.AddPred(t.function.current)
 	// not tracking users for basicblocks
 	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
@@ -226,6 +231,7 @@ func (t *transformer) goTo(block *BasicBlock) *UnconditionalGoto {
 	instr.parent = t.function.current
 	block.AddUser(instr)
 	t.function.current.AddSucc(block)
+	block.AddPred(instr.parent)
 	instr.listElement = &ds.ListElement{Next: nil, Prev: nil, Value: instr}
 	return instr
 }
@@ -479,10 +485,10 @@ func (t *transformer) emitLogicalExpression(e *ast.BinaryExpression) Value {
 	l := t.emitExpression(e.Left())
 
 	x := t.function.current
-	next := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+	next := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: t.nextTemp()}, Index: len(t.function.Blocks)}
 
-	final := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current, next},
+	final := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: t.nextTemp()}, Index: len(t.function.Blocks) + 1}
 	t.function.Blocks = append(t.function.Blocks, next)
 	t.function.Blocks = append(t.function.Blocks, final)
@@ -707,13 +713,13 @@ func (t *transformer) emitReturn(x ast.Expression) {
 func (t *transformer) emitIfElseStatement(e *ast.IfElseStatement) {
 	cond := t.emitExpression(e.Condition())
 	label := t.nextTemp()
-	onTrue := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+	onTrue := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: "if.true." + label}, Index: len(t.function.Blocks)}
 	t.function.Blocks = append(t.function.Blocks, onTrue)
-	onFalse := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+	onFalse := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: "if.false." + label}, Index: len(t.function.Blocks)}
 	t.function.Blocks = append(t.function.Blocks, onFalse)
-	done := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{onTrue, onFalse},
+	done := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: "if.done." + label}, Index: len(t.function.Blocks)}
 	t.function.Blocks = append(t.function.Blocks, done)
 
@@ -736,13 +742,13 @@ func (t *transformer) emitForStatement(f *ast.ForStatement) {
 		t.emitExpression(f.Init())
 	}
 	label := t.nextTemp()
-	condBlock := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{t.function.current},
+	condBlock := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: "for.cond." + label}, Index: len(t.function.Blocks)}
 	t.function.Blocks = append(t.function.Blocks, condBlock)
-	bodyBlock := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{condBlock},
+	bodyBlock := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: "for.body." + label}, Index: len(t.function.Blocks)}
 	t.function.Blocks = append(t.function.Blocks, bodyBlock)
-	done := &BasicBlock{Parent: t.function, Preds: []*BasicBlock{condBlock},
+	done := &BasicBlock{Parent: t.function,
 		valueWithName: valueWithName{name: "for.done." + label}, Index: len(t.function.Blocks)}
 	t.function.Blocks = append(t.function.Blocks, done)
 

@@ -68,3 +68,17 @@ type valueWithName struct {
 func (i *valueWithName) Name() string {
 	return i.name
 }
+
+// NewConstant creates a constant with default value
+// TODO: allow default values for other types as well
+func NewConstant(t types.Type) Value {
+	switch t.Tag() {
+	case types.INT_TYPE:
+		return &ConstantInt{}
+
+	case types.STRING_TYPE:
+		return &ConstantString{}
+	}
+
+	return nil
+}
