@@ -3,6 +3,15 @@ package ssa
 func ReplaceInstr(i Instruction, v Value) {
 	for _, u := range i.Users() {
 		if t, ok := u.(Instruction); ok {
+			if phi, ok := t.(*PhiNode); ok {
+				for _, edge := range phi.Edges {
+					if edge.Value == i {
+						edge.Value = v
+						v.AddUser(phi)
+					}
+				}
+				continue
+			}
 			for idx, o := range t.Operands() {
 				if o == i {
 					t.SetOperand(idx, v)

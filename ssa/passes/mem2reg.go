@@ -153,6 +153,7 @@ func (m *Mem2RegPass) promote(a *ssa.AllocInstr, info *allocInfo) bool {
 func (m *Mem2RegPass) rename(a *ssa.AllocInstr, info *allocInfo) {
 	var currentDef ssa.Value
 	var phiNode *ssa.PhiNode
+	var bucket [][]*ssa.PhiNode = make([][]*ssa.PhiNode, len(m.current.Blocks))
 	defs := make([]ssa.Value, len(m.current.Blocks))
 	for id, block := range m.current.Blocks {
 		for instr := block.First; instr != nil; instr = instr.Next() {
@@ -162,6 +163,8 @@ func (m *Mem2RegPass) rename(a *ssa.AllocInstr, info *allocInfo) {
 			case *ssa.AllocInstr:
 				if a == instr {
 					currentDef = ssa.NewConstant(instr.Type().Elem())
+					instr = ssa.Remove(instr)
+					goto again
 				}
 
 			case *ssa.StoreInstr:
@@ -189,7 +192,16 @@ func (m *Mem2RegPass) rename(a *ssa.AllocInstr, info *allocInfo) {
 					}
 
 					for _, edge := range phi.Edges {
-						edge.Value = defs[edge.Block.Index]
+						def := defs[edge.Block.Index]
+						edge.Value = def
+						if def != nil {
+							def.AddUser(phi)
+						}
+
+						// possible this edge has other vertex > this vertex
+						if def == nil {
+							bucket[edge.Block.Index] = append(bucket[edge.Block.Index], phi)
+						}
 					}
 					currentDef = instr
 
@@ -200,6 +212,19 @@ func (m *Mem2RegPass) rename(a *ssa.AllocInstr, info *allocInfo) {
 		}
 		// save the last def for this block
 		defs[id] = currentDef
+
+		// process our bucket to fill uncomputed edges which were dependent on us
+		for len(bucket[id]) > 0 {
+			phi := bucket[id][0]
+			bucket[id] = bucket[id][1:]
+
+			for _, edge := range phi.Edges {
+				if edge.Block.Index == id {
+					edge.Value = currentDef
+					currentDef.AddUser(phi)
+				}
+			}
+		}
 	}
 }
 
@@ -239,6 +264,8 @@ func (m *Mem2RegPass) Run(f *ssa.Function) bool {
 		if !changed {
 			changed = c
 		}
+		fmt.Printf("\n\n== promoting %s\n", alloc)
+		fmt.Println(m.current)
 	}
 
 	return changed

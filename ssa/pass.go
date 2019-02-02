@@ -25,14 +25,13 @@ type ProgramPass interface {
 	Run(p *Program) bool
 }
 
-
 type PassRunner struct {
 	runList *list.List
-	p *Program
+	p       *Program
 }
 
 func NewPassRunner(program *Program) *PassRunner {
-	p := &PassRunner{runList:list.New(), p:program}
+	p := &PassRunner{runList: list.New(), p: program}
 	return p
 }
 
@@ -63,7 +62,8 @@ func (runner *PassRunner) runFunctionPass(p FunctionPass) {
 	}
 }
 
-type helperBBPass struct { b BBPass }
+type helperBBPass struct{ b BBPass }
+
 func (h *helperBBPass) IsAnalysisPass() bool { return false }
 func (h *helperBBPass) Run(f *Function) bool {
 	changed := false
@@ -74,7 +74,7 @@ func (h *helperBBPass) Run(f *Function) bool {
 }
 
 func (runner *PassRunner) runBBPass(p BBPass) {
-	runner.AddNext(&helperBBPass{b:p})
+	runner.AddNext(&helperBBPass{b: p})
 }
 
 func (runner *PassRunner) runPass(p Pass) {
@@ -82,7 +82,7 @@ func (runner *PassRunner) runPass(p Pass) {
 	switch pass := p.(type) {
 	case FunctionPass:
 		runner.runFunctionPass(pass)
-		fmt.Print(runner.p)
+		// fmt.Print(runner.p)
 
 	case BBPass:
 		runner.runBBPass(pass)
@@ -90,7 +90,7 @@ func (runner *PassRunner) runPass(p Pass) {
 	case ProgramPass:
 		pass.Run(runner.p)
 	default:
-		panic("don't know how run passes of kind: "+fmt.Sprintf("%T", pass))
+		panic("don't know how run passes of kind: " + fmt.Sprintf("%T", pass))
 	}
 }
 
@@ -99,4 +99,3 @@ func (runner *PassRunner) RunPasses() {
 		runner.runPass(p)
 	}
 }
-
