@@ -13,7 +13,7 @@ type Verifier struct {
 func (v *Verifier) IsAnalysisPass() bool { return true }
 
 func (v *Verifier) collectError(f string, args ...interface{}) {
-	err := fmt.Errorf(f, args)
+	err := fmt.Errorf(f, args...)
 	v.errs = append(v.errs, err)
 }
 
@@ -34,9 +34,18 @@ func (v *Verifier) verifyInstruction(i ssa.Instruction) {
 	// each user should have this instruction as operand
 	for _, u := range i.Users() {
 		inOperandList := 0
-		for _, o := range u.(ssa.Instruction).Operands() {
-			if o == u {
-				inOperandList++
+		// XXX: PhiNode behaves differently as it stores operands as pairs
+		if phi, ok := u.(*ssa.PhiNode); ok {
+			for _, edge := range phi.Edges {
+				if edge.Value == i {
+					inOperandList++
+				}
+			}
+		} else {
+			for _, o := range u.(ssa.Instruction).Operands() {
+				if o == i {
+					inOperandList++
+				}
 			}
 		}
 
