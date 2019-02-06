@@ -88,6 +88,10 @@ func (f *Function) String() string {
 		builder.WriteString(", ")
 	}
 
+	if f.Extern {
+		builder.WriteString(") extern\n")
+		return builder.String()
+	}
 	builder.WriteString(") {\n")
 	l = len(f.Blocks)
 	for i, bb := range f.Blocks {
